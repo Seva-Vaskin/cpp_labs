@@ -21,5 +21,6 @@ lab-01_makefile: $(OBJ)
 
 clean:
 	@rm -rf obj/*.o
+	@rm lab-01_makefile
 
 .PHONY: clean
