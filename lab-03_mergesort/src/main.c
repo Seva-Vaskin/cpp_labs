@@ -4,7 +4,7 @@
 #include "stdlib.h"
 
 int my_strcmp(const void *lhs, const void *rhs) {
-	return strcmp((const char *)lhs, (const char *)rhs);
+	return strcmp(*(const char **)rhs, *(const char **)lhs);
 }
 
 int my_intcmp(const void *lhs, const void *rhs) {
@@ -88,6 +88,13 @@ int main(int argc, char ** argv) {
 			printf("Error: memory allocation failed.");
 			return -1;
 		}		
+
+		#ifdef DEBUG
+			printf("Data:\n");
+			for (size_t i = 0; i < elements; i++) {
+				printf("%s\n", arr[i]);
+			}
+		#endif
 
 		for (size_t i = 0; i < elements; i++) {
 			if (i + 1 < elements)
