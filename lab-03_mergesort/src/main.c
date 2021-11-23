@@ -48,8 +48,9 @@ int main(int argc, char ** argv) {
 			if (i + 1 < elements) 
 				printf("%d ", arr[i]);
 			else
-				printf("%d\n", arr[i]);
+				printf("%d", arr[i]);
 		}
+		printf("\n");
 	}
 	else if (strcmp(argv[1], "char") == 0) {
 		#ifdef DEBUG
@@ -74,8 +75,9 @@ int main(int argc, char ** argv) {
 			if (i + 1 < elements)
 				printf("%c ", arr[i]);
 			else
-				printf("%c\n", arr[i]);
+				printf("%c", arr[i]);
 		}
+		printf("\n");
 	}
 	else if (strcmp(argv[1], "str") == 0) {
 		#ifdef DEBUG
@@ -100,8 +102,9 @@ int main(int argc, char ** argv) {
 			if (i + 1 < elements)
 				printf("%s ", arr[i]);
 			else
-				printf("%s\n", arr[i]);
+				printf("%s", arr[i]);
 		}
+		printf("\n");
 	}
 	else {
 		printf("Undefined type of data\n");
