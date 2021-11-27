@@ -1,11 +1,5 @@
 #include "mergesort.h"
 
-void my_memcpy(void *dst, const void *src, size_t bytes_count) {
-	for (size_t i = 0; i < bytes_count; i++, dst++, src++) {
-		*((char *)dst) = *((char *)src);
-	}
-}
-
 #ifdef DEBUG
 size_t mergesort_counter = 0;
 
@@ -48,34 +42,33 @@ int mergesort(void *array, size_t elements, size_t element_size, int (*comparato
 	void * buf = malloc(elements * element_size);
 	if (buf == NULL)
 		return -1;
-	assert(buf);
 
 	size_t left_i = 0;
 	size_t right_i = 0;
 	void * buf_ptr = buf;
 	while (left_i < left_elements && right_i < right_elements) {
 		if (comparator(left_arr + left_i * element_size, right_arr + right_i * element_size) > 0) {
-			my_memcpy(buf_ptr, left_arr + left_i * element_size, element_size);
+			memcpy(buf_ptr, left_arr + left_i * element_size, element_size);
 			left_i++;
 		}
 		else {
-			my_memcpy(buf_ptr, right_arr + right_i * element_size, element_size);
+			memcpy(buf_ptr, right_arr + right_i * element_size, element_size);
 			right_i++;
 		}
 		buf_ptr += element_size;
 	}
 	while (left_i < left_elements) {
-		my_memcpy(buf_ptr, left_arr + left_i * element_size, element_size);
+		memcpy(buf_ptr, left_arr + left_i * element_size, element_size);
 		left_i++;
 		buf_ptr += element_size;
 	}
 	while(right_i < right_elements) {
-		my_memcpy(buf_ptr, right_arr + right_i * element_size, element_size);
+		memcpy(buf_ptr, right_arr + right_i * element_size, element_size);
 		right_i++;
 		buf_ptr += element_size;
 	}
 
-	my_memcpy(array, buf, elements * element_size);
+	memcpy(array, buf, elements * element_size);
 	free(buf);
 
 	#ifdef DEBUG
