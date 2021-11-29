@@ -103,13 +103,14 @@ if [[ -f "$PROJECT_DIR/CMakeLists.txt" ]] ; then
 	BUILD_DIR="$PROJECT_DIR/_build"
 	message "Detected CMake, initializing build directory at $BUILD_DIR."
 	mkdir -p "$BUILD_DIR"
-	if ! cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -G 'Unix Makefile' ; then
+	if ! cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -G 'Unix Makefiles' ; then
 		error "CMake build generation failed"
 	fi
 elif [[ -f "$PROJECT_DIR/Makefile" ]] ; then
 	message "Detected Makefile, using it."
 	BUILD_DIR="$PROJECT_DIR"
 	EXECUTABLE_PATH="$PROJECT_DIR/$EXECUTABLE"
+	MAKEFILE_CHECK=1
 fi
 EXECUTABLE_PATH="$BUILD_DIR/$EXECUTABLE"
 
@@ -119,7 +120,7 @@ fi
 if [[ ! -f $EXECUTABLE_PATH ]] ; then
 	error "After build has been executed, an expected executable wasn't found at $EXECUTABLE_PATH."
 fi
-if ! make -C "$BUILD_DIR" -q "$EXECUTABLE" ; then
+if [[ -v MAKEFILE_CHECK ]] && ! make -C "$BUILD_DIR" -q "$EXECUTABLE" ; then
 	error "Makefile is inconsistent, there are pending tasks after the build."
 fi
 
