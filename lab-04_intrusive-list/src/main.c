@@ -33,8 +33,10 @@ void remove_point(intrusive_list_t *list, int x, int y) { // removes all (x, y) 
 void show_all_points(intrusive_list_t *list) {
     intrusive_node_t* n = list->head.next;
     while (n) {
-        printf("(%d %d) ", node_to_point(n)->x, node_to_point(n)->y);
+        printf("(%d %d)", node_to_point(n)->x, node_to_point(n)->y);
         n = n->next;
+        if (n)
+            printf(" ");
     }
     printf("\n");
 }
