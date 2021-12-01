@@ -3,7 +3,7 @@ FLAGS=-c -I include/ -Wall -Wextra -Werror
 OBJ_DIR=obj
 SRC=$(wildcard src/*.c)
 OBJ=$(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRC))
-NAME=lab-04_intrusive_list
+NAME=lab-04_intrusive-list
 
 all: $(NAME)
 
