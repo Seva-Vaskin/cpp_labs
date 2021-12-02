@@ -1,0 +1,298 @@
+#!/bin/bash
+set -o nounset -o errexit -o pipefail
+
+# Uses getopt(1) from util-linux, based on GNU libC getopt(3)
+if getopt --test >/dev/null || [[ $? -ne 4 ]] ; then
+	echo 'Enchanced getopt (from util-linux) is required.'
+	exit 2
+fi
+
+TEMP=$(getopt -s bash -o 'rvqe:o:' --longoptions 'report,executable:,report-path:,verbose,quiet,output-dir:' -- "$@")
+eval set -- "$TEMP"
+unset TEMP
+
+while true ; do
+	opt="$1"
+	shift
+	case "$opt" in
+		'-v' | '--verbose')
+			unset QUIET
+			VERBOSE=1
+			;;
+		'-q' | '--quiet')
+			unset VERBOSE
+			QUIET=1
+			;;
+		'-r' | '--report')
+			REPORT=1
+			;;
+		'--report-path')
+			REPORT_PATH="$1"
+			shift
+			;;
+		'-e' | '--executable')
+			EXECUTABLE="$1"
+			shift
+			;;
+		'-o' | '--output-dir')
+			OUTPUT_DIR="$1"
+			shift
+			;;
+		'--')
+			break
+			;;
+		*)
+			exit 2
+	esac
+	unset opt
+done
+
+if [[ ! -v VERBOSE ]] ; then
+	function log {
+		: ;
+	}
+else
+	function log {
+		echo '|' "$@"
+	}
+fi
+
+if [[ -v QUIET ]] ; then
+	function message {
+		: ;
+	}
+else
+	function message {
+		echo "$@"
+	}
+fi
+
+function error {
+	echo "$@" >&2
+	exit 2
+}
+
+log "Welcome to new tests runner."
+
+PROJECT_DIR="$1"
+if [[ ! -d "$PROJECT_DIR" ]] ; then
+	error "Input directory $PROJECT_DIR does not exist."
+fi
+if [[ ! -v EXECUTABLE ]] ; then
+	EXECUTABLE="$(basename "$PROJECT_DIR")" # FIXME doesn't work with .
+fi
+
+log "PROJECT_DIR=$PROJECT_DIR"
+log "EXECUTABLE=$EXECUTABLE"
+
+EXIT_CODE=0
+
+# : ${MAIN_SRC_REL_PATH:='./src/main.cpp'}
+: ${PUBLIC_SUITE_PATH:="$PROJECT_DIR/tests"}
+: ${OUTPUT_DIR:='./output'}
+
+if [[ ! -d $OUTPUT_DIR ]] ; then
+	mkdir $OUTPUT_DIR
+fi
+rm -rf $OUTPUT_DIR/*
+: ${REPORT_PATH:="$OUTPUT_DIR/tests-report.xml"}
+
+## BUILDING
+
+if [[ -f "$PROJECT_DIR/CMakeLists.txt" ]] ; then
+	BUILD_DIR="$PROJECT_DIR/_build"
+	message "Detected CMake, initializing build directory at $BUILD_DIR."
+	mkdir -p "$BUILD_DIR"
+	if ! cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -G 'Unix Makefile' ; then
+		error "CMake build generation failed"
+	fi
+elif [[ -f "$PROJECT_DIR/Makefile" ]] ; then
+	message "Detected Makefile, using it."
+	BUILD_DIR="$PROJECT_DIR"
+	EXECUTABLE_PATH="$PROJECT_DIR/$EXECUTABLE"
+fi
+EXECUTABLE_PATH="$BUILD_DIR/$EXECUTABLE"
+
+if ! make -C "$BUILD_DIR" -k ; then
+	error "Vanilla build failed."
+fi
+if [[ ! -f $EXECUTABLE_PATH ]] ; then
+	error "After build has been executed, an expected executable wasn't found at $EXECUTABLE_PATH."
+fi
+if ! make -C "$BUILD_DIR" -q "$EXECUTABLE" ; then
+	error "Makefile is inconsistent, there are pending tasks after the build."
+fi
+
+## RUNNING
+
+if [[ -v REPORT ]] ; then
+	function report {
+		echo "$@" >> "$REPORT_PATH"
+	}
+else
+	function report {
+		: ;
+	}
+fi
+
+function test_error {
+	local INTRO="$1"
+	local TYPE="$2"
+	local MESSAGE="$3"
+	TEST_EXIT_CODE="${4-'1'}"
+
+	local FAILURE_TAG="${FAILURE_TAG-failure}"
+	
+	echo "  $INTRO: $MESSAGE"
+	report "<${FAILURE_TAG} message=\"$TYPE\">$MESSAGE</$FAILURE_TAG>"
+}
+
+function compare_files {
+	local EXPECTED_PATH="$1"
+	local ACTUAL_PATH="$2"
+	if [[ -f $EXPECTED_PATH ]] ; then
+		if ! diff -bB "$ACTUAL_PATH" "$EXPECTED_PATH" >/dev/null ; then
+			test_error "$3" "$4" "$3 mismatches (ignoring whitespace)."
+		fi
+		if ! diff "$ACTUAL_PATH" "$EXPECTED_PATH" >/dev/null ; then
+			test_error "$3" "$4" "$3 mismatches (whitespace sensitive)."
+		fi
+	fi
+}
+
+function run_tests {
+	local TESTS_NAME="$1"
+	local TESTS_DIR="$2"
+
+	if [[ ! -d $TESTS_DIR ]] ; then
+		return 0
+	fi
+
+	local COUNT=0
+	for t in "$TESTS_DIR"/*.test.* ; do
+		(( COUNT += 1 ))
+	done
+
+	report "<testsuite name=\"$TESTS_NAME\" tests=\"$COUNT\">"
+
+	if ! mkdir "$OUTPUT_DIR/$TESTS_NAME" ; then
+		FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Failed to create outputs directory".
+		EXIT_CODE=2
+		return 1
+	fi
+
+	for TEST_PATH in "$TESTS_DIR"/*.test.* ; do
+		local TEST_FILE_NAME="$(basename "$TEST_PATH")"
+		local TEST_NAME="${TEST_FILE_NAME%%.*}"
+		local TEST_TYPE="${TEST_FILE_NAME##*.}"
+
+		local EXPECTED_STDOUT="$TESTS_DIR/$TEST_NAME.expected-output"
+		local EXPECTED_FILE="$TESTS_DIR/$TEST_NAME.expected-file"
+
+		local RUN_OUTPUT_DIR="$OUTPUT_DIR/$TESTS_NAME/"
+
+		local RUN_STDOUT="$RUN_OUTPUT_DIR/$TEST_NAME.stdout.log"
+		local RUN_STDERR="$RUN_OUTPUT_DIR/$TEST_NAME.stderr.log"
+		local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.output.bin" 
+
+		local TEST_EXIT_CODE=0
+
+		echo "Executing $TESTS_NAME test $TEST_NAME."
+		case "$TEST_TYPE" in
+			"args" | "args-fail") local TEST_CMD="$EXECUTABLE_PATH $(cat $TEST_PATH) < /dev/null" ;;
+			"input" | "input-no-vg") local TEST_CMD="$EXECUTABLE_PATH < $TEST_PATH" ;;
+			*)
+				FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Unknown test type $TEST_TYPE."
+				EXIT_CODE=2
+				continue
+				;;
+		esac
+
+		report "<testcase name=\"$TEST_NAME\">"
+
+		local RUN_TEST="$TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
+		# Bash parses && before word expansion, can't store EVAL settings in variable.
+		log "About to run '$RUN_TEST'"
+		local RUN_STATUS="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && eval $RUN_TEST)"
+		local RUN_EXIT_CODE=$?
+		log RUN_EXIT_CODE="$RUN_EXIT_CODE"
+		# TODO: should we filter stdout for prompts? IDK.
+
+		if [[ $TEST_TYPE != 'args-fail' ]] ; then
+			if [[ $RUN_EXIT_CODE != 0 ]] ; then
+				test_error 'Exit code' 'exit-code' "Execution failed with code $RUN_EXIT_CODE."
+			fi
+		else
+			if [[ $RUN_EXIT_CODE == 0 ]] ; then
+				test_error 'Exit code' 'exit-code' "Execution NOT failed (when expected)."
+			fi
+			if [[ -f "$OUTPUT_FILE" ]] ; then
+				test_error "Output file" 'output-file' "Output file must not be created."
+			fi
+		fi
+
+		compare_files "$EXPECTED_STDOUT" "$RUN_STDOUT" 'Stdout' 'stdout'
+		compare_files "$EXPECTED_FILE" "$RUN_FILE" 'Output file' 'output'
+
+		if [[ -v REPORT ]] ; then
+			report -n "<system-out>"
+			cat "$RUN_STDOUT" >> "$REPORT_PATH"
+			report "</system-out>"
+			report -n "<system-err>"
+			cat "$RUN_STDERR" >> "$REPORT_PATH"
+			report "</system-err>"
+		fi
+
+		report "</testcase>"
+		
+		if [[ $TEST_TYPE != *-no-vg ]] ; then
+			report "<testcase name=\"$TEST_NAME (run with Valgrind)\">"
+			
+			local RUN_STDOUT="$RUN_OUTPUT_DIR/$TEST_NAME.vg-stdout.log"
+			local RUN_STDERR="$RUN_OUTPUT_DIR/$TEST_NAME.vg-stderr.log"
+			local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.vg-output.bin" 
+
+			local RUN_TEST="valgrind $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
+			log "About to run '$RUN_TEST'"
+			local RUN_STATUS="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && eval $RUN_TEST)"
+			local RUN_EXIT_CODE=$?
+			log RUN_EXIT_CODE="$RUN_EXIT_CODE"
+
+			if [[ $TEST_TYPE != 'args-fail' ]] ; then
+				if [[ $RUN_EXIT_CODE != 0 ]] ; then
+					test_error 'Exit code' 'exit-code' "Execution failed with code $RUN_EXIT_CODE."
+				fi
+			else
+				if [[ $RUN_EXIT_CODE == 0 ]] ; then
+					test_error 'Exit code' 'exit-code' "Execution NOT failed (when expected)."
+				fi
+				if [[ -f "$OUTPUT_FILE" ]] ; then
+					test_error "Output file" 'output-file' "Output file must not be created."
+				fi
+			fi
+
+			report "</testcase>"
+		fi
+
+		if [[ $TEST_EXIT_CODE != 0 ]] ; then
+			echo "  Test failed."
+			EXIT_CODE=1
+		else
+			echo "  Test succeeded."
+		fi
+	done
+
+	report "</testsuite>"
+}
+
+if [[ -v REPORT ]] ; then
+	echo '<?xml version="1.0" encoding="UTF-8"?>' > "$REPORT_PATH"
+	echo '<testsuites>' >> "$REPORT_PATH"
+fi
+
+run_tests 'public' "$PUBLIC_SUITE_PATH"
+run_tests 'private' "${PRIVATE_SUITE_PATH-/dev/null}"
+
+report '</testsuites>'
+
+exit "$EXIT_CODE"
