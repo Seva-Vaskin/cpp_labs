@@ -21,7 +21,7 @@ void add_point(intrusive_list_t *list, int x, int y) {
 void remove_point(intrusive_list_t *list, int x, int y) { // removes all (x, y) pairs
     intrusive_node_t* n = list->head.next;
     while (n) {
-        intrusive_node_t*next = n->next;
+        intrusive_node_t* next = n->next;
         if (node_to_point(n)->x == x && node_to_point(n)->y == y) {
             remove_node(n);
             free(node_to_point(n));
@@ -44,7 +44,7 @@ void show_all_points(intrusive_list_t *list) {
 void remove_all_points(intrusive_list_t *list) {
     intrusive_node_t* n = list->head.next;
     while (n) {
-        intrusive_node_t*next = n->next;
+        intrusive_node_t* next = n->next;
         remove_node(n);
         free(node_to_point(n));
         n = next;
