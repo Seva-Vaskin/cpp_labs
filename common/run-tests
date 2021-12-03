@@ -214,8 +214,7 @@ function run_tests {
 		local RUN_TEST="$TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 		# Bash parses && before word expansion, can't store EVAL settings in variable.
 		log "About to run '$RUN_TEST'"
-		local RUN_STATUS="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && eval $RUN_TEST)"
-		local RUN_EXIT_CODE=$?
+		local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && eval $RUN_TEST ; echo $?)"
 		log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 		# TODO: should we filter stdout for prompts? IDK.
 
@@ -253,10 +252,9 @@ function run_tests {
 			local RUN_STDERR="$RUN_OUTPUT_DIR/$TEST_NAME.vg-stderr.log"
 			local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.vg-output.bin" 
 
-			local RUN_TEST="valgrind $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
+			local RUN_TEST="valgrind --leak-check=full --error-exitcode=123 -- $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 			log "About to run '$RUN_TEST'"
-			local RUN_STATUS="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && eval $RUN_TEST)"
-			local RUN_EXIT_CODE=$?
+			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && eval $RUN_TEST ; echo $?)"
 			log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 
 			if [[ $TEST_TYPE != 'args-fail' ]] ; then
