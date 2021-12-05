@@ -200,7 +200,10 @@ function run_tests {
 
 		echo "Executing $TESTS_NAME test $TEST_NAME."
 		case "$TEST_TYPE" in
-			"args" | "args-fail") local TEST_CMD="$EXECUTABLE_PATH $(cat $TEST_PATH) < /dev/null" ;;
+			"args" | "args-fail")
+				local TEST_ARGS="$(sed -e "s:OUTPUT_FILE:$RUN_FILE:g" -e "s:TESTS_DIR:$TESTS_DIR:g" "$TEST_PATH")"
+				local TEST_CMD="$EXECUTABLE_PATH $TEST_ARGS < /dev/null"
+				;;
 			"input" | "input-no-vg") local TEST_CMD="$EXECUTABLE_PATH < $TEST_PATH" ;;
 			*)
 				FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Unknown test type $TEST_TYPE."
@@ -246,6 +249,8 @@ function run_tests {
 		report "</testcase>"
 		
 		if [[ $TEST_TYPE != *-no-vg ]] ; then
+			echo "  Executing with valgrind now..."
+
 			report "<testcase name=\"$TEST_NAME (run with Valgrind)\">"
 			
 			local RUN_STDOUT="$RUN_OUTPUT_DIR/$TEST_NAME.vg-stdout.log"
