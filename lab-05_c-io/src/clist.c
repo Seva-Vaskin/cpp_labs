@@ -6,12 +6,17 @@ void init_list(intrusive_list_t *list) {
     list->head.prev = NULL;
 }
 
+intrusive_node_t * find_tail(intrusive_list_t *list) {
+	intrusive_node_t * tail = &list->head;
+	while (tail->next)
+		tail = tail->next;
+	return tail;
+}
+
 void add_node(intrusive_list_t *list, intrusive_node_t *node) {
-    node->prev = &list->head;
-    node->next = list->head.next;
-    if (list->head.next)
-        list->head.next->prev = node;
-    list->head.next = node;
+	intrusive_node_t *tail = find_tail(list);
+    tail->next = node;
+    node->prev = tail;
 }
 
 void remove_node(intrusive_node_t *node) {

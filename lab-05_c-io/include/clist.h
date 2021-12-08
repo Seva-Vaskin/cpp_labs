@@ -24,4 +24,6 @@ int get_length(intrusive_list_t *);
 
 void apply(intrusive_list_t *list, void (*op)(intrusive_node_t *node, void *data), void *data);
 
+intrusive_node_t * find_tail(intrusive_list_t *list);
+
 #endif
