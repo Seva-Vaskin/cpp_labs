@@ -3,18 +3,22 @@
 #include <stdbool.h>
 #include "string.h"
 
+#define INT24_SIZE 3
+#define INT24_MAX ((1 << 23) - 1)
+#define INT24_MINIS_ONE 0x00ffffff
+
 int to_int24(int a) {
 	if (a >= 0)
 		return a;
 	else
-		return (-a ^ 0x00ffffff) + 1;
+		return (-a ^ INT24_MINIS_ONE) + 1;
 }
 
 int from_int24(int a) {
-	if (a < (1 << 23)) 
+	if (a <= INT24_MAX) 
 		return a;
 	else
-		return -((a - 1) ^ 0x00ffffff);
+		return -((a - 1) ^ INT24_MINIS_ONE);
 }
 
 void count_operation(intrusive_node_t *node, void *data) {
@@ -48,11 +52,11 @@ bool load_binary(intrusive_list_t *list, char *file_path) {
         return 0;
     }
 
-    char buf[6], x_buf[4] = {0}, y_buf[4] = {0};
+    char buf[INT24_SIZE * 2], x_buf[sizeof(int)] = {0}, y_buf[sizeof(int)] = {0};
 
-    while (fread(buf, 3, 2, file)) {
-        memcpy(x_buf, buf, 3);
-        memcpy(y_buf, buf + 3, 3);
+    while (fread(buf, INT24_SIZE, 2, file)) {
+        memcpy(x_buf, buf, INT24_SIZE);
+        memcpy(y_buf, buf + INT24_SIZE, INT24_SIZE);
     	int x24 = *(int *) x_buf;
     	int y24 = *(int *) y_buf;
         int x = from_int24(x24);
@@ -96,8 +100,8 @@ bool save_binary(intrusive_list_t *list, char *file_path) {
         int y = node_to_point(node)->y;
         int x24 = to_int24(x);
         int y24 = to_int24(y);
-        fwrite(&x24, 3, 1, file);
-        fwrite(&y24, 3, 1, file);
+        fwrite(&x24, INT24_SIZE, 1, file);
+        fwrite(&y24, INT24_SIZE, 1, file);
         node = node->next;
     }
 
