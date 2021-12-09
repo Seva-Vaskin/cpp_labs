@@ -168,6 +168,7 @@ int main(int argc, char **argv) {
             return 1;
         }
         apply(&list, print_operation, argv[4]);
+        printf("\n");
     } else if (is_count) {
         int count = 0;
         apply(&list, count_operation, &count);
