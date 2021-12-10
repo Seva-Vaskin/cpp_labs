@@ -161,6 +161,20 @@ function compare_files {
 	fi
 }
 
+function report_stdouterr {
+	if [[ ! -v REPORT ]] ; then
+		return
+	fi
+	report -n "<system-out>"
+	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDOUT" | \
+		sed -e 's/&/&amp;/g' -e 's/</&lt;/g' -e 's/>/&rt;/g' >> "$REPORT_PATH"
+	report "</system-out>"
+	report -n "<system-err>"
+	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDERR" | \
+		sed -e 's/&/&amp;/g' -e 's/</&lt;/g' -e 's/>/&rt;/g' >> "$REPORT_PATH"
+	report "</system-err>"
+}
+
 function run_tests {
 	local TESTS_NAME="$1"
 	local TESTS_DIR="$2"
@@ -237,14 +251,7 @@ function run_tests {
 		compare_files "$EXPECTED_STDOUT" "$RUN_STDOUT" 'Stdout' 'stdout'
 		compare_files "$EXPECTED_FILE" "$RUN_FILE" 'Output file' 'output'
 
-		if [[ -v REPORT ]] ; then
-			report -n "<system-out>"
-			sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDOUT"  >> "$REPORT_PATH"
-			report "</system-out>"
-			report -n "<system-err>"
-			sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDERR" >> "$REPORT_PATH"
-			report "</system-err>"
-		fi
+		report_stdouterr
 
 		report "</testcase>"
 		
@@ -275,14 +282,7 @@ function run_tests {
 				fi
 			fi
 
-			if [[ -v REPORT ]] ; then
-				report -n "<system-out>"
-				sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDOUT"  >> "$REPORT_PATH"
-				report "</system-out>"
-				report -n "<system-err>"
-				sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDERR" >> "$REPORT_PATH"
-				report "</system-err>"
-			fi
+			report_stdouterr
 
 			report "</testcase>"
 		fi
