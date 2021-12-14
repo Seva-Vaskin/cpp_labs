@@ -215,7 +215,7 @@ function run_tests {
 		echo "Executing $TESTS_NAME test $TEST_NAME."
 		case "$TEST_TYPE" in
 			"args" | "args-fail")
-				local TEST_ARGS="$(sed -e "s:OUTPUT_FILE:$RUN_FILE:g" -e "s:TESTS_DIR:$TESTS_DIR:g" "$TEST_PATH")"
+				local TEST_ARGS="$(sed -e "s:OUTPUT_FILE:$RUN_FILE:g" -e "s:TESTS_DIR:$TESTS_DIR:g" "$TEST_PATH" -e "s:OUTPUT_DIR:$RUN_OUTPUT_DIR:g")"
 				local TEST_CMD="$EXECUTABLE_PATH $TEST_ARGS < /dev/null"
 				;;
 			"input" | "input-no-vg") local TEST_CMD="$EXECUTABLE_PATH < $TEST_PATH" ;;
@@ -243,7 +243,7 @@ function run_tests {
 			if [[ $RUN_EXIT_CODE == 0 ]] ; then
 				test_error 'Exit code' 'exit-code' "Execution NOT failed (when expected)."
 			fi
-			if [[ -f "$OUTPUT_FILE" ]] ; then
+			if [[ -f "$RUN_FILE" ]] ; then
 				test_error "Output file" 'output-file' "Output file must not be created."
 			fi
 		fi
@@ -266,7 +266,7 @@ function run_tests {
 
 			local RUN_TEST="valgrind --leak-check=full --error-exitcode=123 -- $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 			log "About to run '$RUN_TEST'"
-			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t $((10 * 1024)) && ulimit -f 50 && eval $RUN_TEST ; echo $?)"
+			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t $((10 * 1024)) && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
 			log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 
 			if [[ $TEST_TYPE != 'args-fail' ]] ; then
@@ -277,7 +277,7 @@ function run_tests {
 				if [[ $RUN_EXIT_CODE == 0 ]] ; then
 					test_error 'Exit code' 'exit-code' "Execution NOT failed (when expected)."
 				fi
-				if [[ -f "$OUTPUT_FILE" ]] ; then
+				if [[ -f "$RUN_FILE" ]] ; then
 					test_error "Output file" 'output-file' "Output file must not be created."
 				fi
 			fi
