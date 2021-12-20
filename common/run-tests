@@ -167,11 +167,11 @@ function report_stdouterr {
 	fi
 	report -n "<system-out>"
 	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDOUT" | \
-		sed -e 's/&/&amp;/g' -e 's/</&lt;/g' -e 's/>/&rt;/g' >> "$REPORT_PATH"
+		sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' >> "$REPORT_PATH"
 	report "</system-out>"
 	report -n "<system-err>"
 	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDERR" | \
-		sed -e 's/&/&amp;/g' -e 's/</&lt;/g' -e 's/>/&rt;/g' >> "$REPORT_PATH"
+		sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' >> "$REPORT_PATH"
 	report "</system-err>"
 }
 
