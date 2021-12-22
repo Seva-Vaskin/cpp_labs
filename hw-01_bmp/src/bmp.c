@@ -55,9 +55,8 @@ void save_bmp(BMP *bmp, FILE *stream) {
 }
 
 bool check_bmp_subrectangular(BMP *bmp, LONG x, LONG y, LONG w, LONG h) {
-    return 0 <= x && x <= bmp->bit_map_info.bi_width 
-    	&& 0 <= y && y <= bmp->bit_map_info.bi_height
-    	&& 0 < w && 0 < h
+    return 0 <= x && 0 < w
+    	&& 0 <= y && 0 < h
     	&& x + w <= bmp->bit_map_info.bi_width 
     	&& y + h <= bmp->bit_map_info.bi_height;
 }
