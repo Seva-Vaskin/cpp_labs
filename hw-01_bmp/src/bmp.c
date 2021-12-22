@@ -51,7 +51,7 @@ BMP* create_bmp(BMP* header_src, int w, int h) {
 void save_bmp(BMP *bmp, FILE *stream) {
     fwrite(&bmp->bit_map_file_header, sizeof(BIT_MAP_FILE_HEADER), 1, stream);
     fwrite(&bmp->bit_map_info, sizeof(BIT_MAP_INFO), 1, stream);
-    fwrite(bmp->flat_data, sizeof(PIXEL), bmp->bit_map_info.bi_size_image, stream);
+    fwrite(bmp->flat_data, 1, bmp->bit_map_info.bi_size_image, stream);
 }
 
 bool check_bmp_subrectangular(BMP *bmp, LONG x, LONG y, LONG w, LONG h) {

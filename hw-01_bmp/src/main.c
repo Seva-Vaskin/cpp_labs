@@ -47,11 +47,14 @@ int crop_rotate(int argc, char *argv[]) {
     LONG y = atoi(argv[5]);
     BMP *cropped_bmp = crop(bmp, x, y, w, h);
     if (!cropped_bmp) {
+        free_bmp(bmp);
         fprintf(stderr, "Error while cropping bmp\n");
         return 1;
     }
      BMP *cropped_rotated_bmp = rotate(cropped_bmp);
      if (!cropped_rotated_bmp) {
+        free_bmp(bmp);
+        free_bmp(cropped_bmp);
         fprintf(stderr, "Error while rotating bmp\n");
         return 1;
      }
