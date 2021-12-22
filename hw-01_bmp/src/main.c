@@ -88,6 +88,7 @@ int make_copy(int argc, char *argv[]) {
     return exit_code;
 }
 
+
 int process_operation(int argc, char *argv[], int (*operation)(int, char **)) {
     int exit_code = operation(argc, argv);
     if (exit_code == 0) {
