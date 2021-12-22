@@ -23,7 +23,7 @@ void init_data(BMP *bmp) {
     bmp->data = (PIXEL**)malloc(bmp->bit_map_info.bi_height * sizeof (PIXEL *));
     LONG row_length_with_padding = get_row_length_with_padding(bmp->bit_map_info.bi_width);
     for (int i = 0; i < bmp->bit_map_info.bi_height; i++) {
-        bmp->data[i] = &bmp->flat_data[i * row_length_with_padding];
+        bmp->data[bmp->bit_map_info.bi_height - 1 - i] = &bmp->flat_data[i * row_length_with_padding];
     }
 }
 
@@ -76,7 +76,7 @@ BMP* rotate(BMP *bmp) {
     BMP *result = create_bmp(bmp, h, w);
     for (LONG i = 0; i < h; i++) {
         for (LONG j = 0; j < w; j++) {
-            result->data[w - j - 1][i] = bmp->data[i][j];
+            result->data[j][h - 1 - i] = bmp->data[i][j];
         }
     }
     return result;

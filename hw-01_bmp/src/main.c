@@ -15,6 +15,7 @@ BMP *read_bmp(char *filename) {
         return NULL;
     }
     load_bmp(bmp, input_stream);
+    fclose(input_stream);
     return bmp;
 }
 
@@ -25,6 +26,7 @@ int write_bmp(BMP *bmp, char *filename) {
         return 1;
     }
     save_bmp(bmp, output_stream);
+    fclose(output_stream);
     return 0;
 }
 
@@ -40,10 +42,9 @@ int crop_rotate(int argc, char *argv[]) {
         return 1;
 
     LONG x = atoi(argv[4]);
-    LONG y = atoi(argv[5]);
     LONG w = atoi(argv[6]);
     LONG h = atoi(argv[7]);
-
+    LONG y = atoi(argv[5]);
     BMP *cropped_bmp = crop(bmp, x, y, w, h);
     if (!cropped_bmp) {
         fprintf(stderr, "Error while cropping bmp\n");
