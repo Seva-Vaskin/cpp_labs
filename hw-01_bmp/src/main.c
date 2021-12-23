@@ -164,6 +164,7 @@ int extract(int argc, char *argv[]) {
         char c = decode_symbol(keys, bmp);
         fprintf(message_stream, "%c", c);   
     }
+    fprintf(message_stream, "\n");
 
     fclose(key_stream);
     fclose(message_stream);
