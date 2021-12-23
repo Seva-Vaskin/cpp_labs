@@ -40,9 +40,9 @@ typedef struct
 
 
 typedef struct {
-    BYTE red;
-    BYTE green;
     BYTE blue;
+    BYTE green;
+    BYTE red;
 
 } PIXEL;
 
@@ -52,6 +52,7 @@ typedef struct
     BIT_MAP_INFO bit_map_info;
     PIXEL *flat_data;
     PIXEL **data;
+    
 } BMP;
 
 void init_data(BMP *bmp);
