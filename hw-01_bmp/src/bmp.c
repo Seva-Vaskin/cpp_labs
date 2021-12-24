@@ -67,7 +67,7 @@ BMP *crop(BMP *bmp, LONG x, LONG y, LONG w, LONG h) {
     BMP *result = create_bmp(bmp, w, h);
     for (LONG i = 0; i < h; i++) {
         for (LONG j = 0; j < w; j++) {
-            result->data[i][j] = bmp->data[x + i][y + j];
+            result->data[i][j] = bmp->data[y + i][x + j];
         }
     }
     return result;
