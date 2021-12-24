@@ -14,7 +14,7 @@ void load_bmp(BMP *bmp, FILE *stream) {
     fread(&bmp->bit_map_info, sizeof(BIT_MAP_INFO), 1, stream);
 
     // data reading
-    bmp->flat_data = (PIXEL *) malloc(bmp->bit_map_info.bi_size_image);
+    bmp->flat_data = (char *) malloc(bmp->bit_map_info.bi_size_image);
     fread(bmp->flat_data, bmp->bit_map_info.bi_size_image, 1, stream);
     init_data(bmp);
 }
@@ -23,13 +23,11 @@ void init_data(BMP *bmp) {
     bmp->data = (PIXEL **) malloc(bmp->bit_map_info.bi_height * sizeof(PIXEL *));
     LONG row_byte_length = get_row_byte_length(bmp->bit_map_info.bi_width);
     for (int i = 0; i < bmp->bit_map_info.bi_height; i++) {
-        bmp->data[bmp->bit_map_info.bi_height - 1 - i] = (PIXEL *) ((char *) bmp->flat_data + i * row_byte_length);
+        bmp->data[bmp->bit_map_info.bi_height - 1 - i] = (PIXEL *) (bmp->flat_data + i * row_byte_length);
     }
 }
 
 void free_bmp(BMP *bmp) {
-    if (!bmp)
-        return;
     free(bmp->flat_data);
     free(bmp->data);
     free(bmp);
@@ -43,7 +41,7 @@ BMP *create_bmp(BMP *header_src, int w, int h) {
     result->bit_map_info.bi_height = h;
     result->bit_map_info.bi_width = w;
     result->bit_map_info.bi_size_image = image_size;
-    result->flat_data = (PIXEL *) calloc(image_size, 1);
+    result->flat_data = (char *) calloc(image_size, 1);
     init_data(result);
     return result;
 }

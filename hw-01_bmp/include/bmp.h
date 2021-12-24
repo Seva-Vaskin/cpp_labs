@@ -50,7 +50,7 @@ typedef struct
 {
     BIT_MAP_FILE_HEADER bit_map_file_header;
     BIT_MAP_INFO bit_map_info;
-    PIXEL *flat_data;
+    char *flat_data;
     PIXEL **data;
 
 } BMP;

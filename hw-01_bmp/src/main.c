@@ -42,9 +42,9 @@ int crop_rotate(int argc, char *argv[]) {
         return 1;
 
     LONG x = atoi(argv[4]);
+    LONG y = atoi(argv[5]);
     LONG w = atoi(argv[6]);
     LONG h = atoi(argv[7]);
-    LONG y = atoi(argv[5]);
 
     BMP *cropped_bmp = crop(bmp, x, y, w, h);
     if (!cropped_bmp) {
