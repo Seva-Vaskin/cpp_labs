@@ -120,7 +120,7 @@ int insert(int argc, char *argv[]) {
 
     char c;
     KEY keys[SYMBOL_SIZE];
-    while ((c = getc(message_stream)) != EOF) {
+    while ((c = getc(message_stream)) != EOF && c != '\n') {
         read_keys(keys, key_stream);
         encode_symbol(c, keys, bmp);
     }
@@ -163,6 +163,7 @@ int extract(int argc, char *argv[]) {
         char c = decode_symbol(keys, bmp);
         fprintf(message_stream, "%c", c);
     }
+    fprintf(message_stream, "\n");
 
     fclose(key_stream);
     fclose(message_stream);
