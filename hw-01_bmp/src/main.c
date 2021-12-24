@@ -131,6 +131,7 @@ int insert(int argc, char *argv[]) {
         fprintf(stderr, "Error while writing result file\n");
         return 1;
     }
+    free_bmp(bmp);
     return 0;
 }
 
@@ -167,6 +168,7 @@ int extract(int argc, char *argv[]) {
 
     fclose(key_stream);
     fclose(message_stream);
+    free_bmp(bmp);
     return 0;
 }
 
