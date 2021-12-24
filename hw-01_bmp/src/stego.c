@@ -31,7 +31,6 @@ void write_key(FILE *stream, KEY key) {
 }
 
 void encode_bit(bool bit, KEY key, BMP *bmp) {
-    fprintf(stderr, "%d", bit);
     PIXEL *pixel = &bmp->data[key.y][key.x];
     if (key.color == 'R')
         set_bit(&pixel->red, bit);

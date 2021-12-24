@@ -107,7 +107,7 @@ int insert(int argc, char *argv[]) {
         return 1;
     }
 
-    FILE *key_stream  = fopen(argv[4], "w");
+    FILE *key_stream  = fopen(argv[4], "r");
     if (!key_stream) {
         fprintf(stderr, "can't open key file\n");
         return 1;
@@ -118,13 +118,10 @@ int insert(int argc, char *argv[]) {
         return 1;
     }
 
-
     char c;
     KEY keys[SYMBOL_SIZE];
-    int x = 0, y = 0;
     while ((c = getc(message_stream)) != EOF) {
-        make_keys(&x, &y, bmp, keys);
-        write_keys(keys, key_stream);
+        read_keys(keys, key_stream);
         encode_symbol(c, keys, bmp);
     }
 
