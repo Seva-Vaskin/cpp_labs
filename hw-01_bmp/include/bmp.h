@@ -55,7 +55,6 @@ typedef struct
 
 } BMP;
 
-void init_data(BMP *bmp);
 
 void load_bmp(BMP *bmp, FILE *stream);
 
@@ -68,11 +67,5 @@ BMP* crop(BMP *bmp, LONG x, LONG y, LONG w, LONG h);
 BMP* rotate(BMP *bmp);
 
 void free_bmp(BMP *bmp);
-
-LONG get_padding_size(LONG row_length);
-
-LONG get_row_byte_length(LONG row_length);
-
-bool check_bmp_subrectangular(BMP *bmp, LONG x, LONG y, LONG w, LONG h);
 
 #endif

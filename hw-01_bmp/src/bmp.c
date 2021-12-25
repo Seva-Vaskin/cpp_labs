@@ -1,11 +1,26 @@
 #include "bmp.h"
 
-LONG get_padding_size(LONG row_length) {
+static LONG get_padding_size(LONG row_length) {
     return (PADDING_ALIGNMENT - row_length * sizeof(PIXEL) % PADDING_ALIGNMENT) % PADDING_ALIGNMENT;
 }
 
-LONG get_row_byte_length(LONG row_length) {
+static LONG get_row_byte_length(LONG row_length) {
     return row_length * sizeof(PIXEL) + get_padding_size(row_length);
+}
+
+static void init_data(BMP *bmp) {
+    bmp->data = (PIXEL **) malloc(bmp->bit_map_info.bi_height * sizeof(PIXEL *));
+    LONG row_byte_length = get_row_byte_length(bmp->bit_map_info.bi_width);
+    for (int i = 0; i < bmp->bit_map_info.bi_height; i++) {
+        bmp->data[bmp->bit_map_info.bi_height - 1 - i] = (PIXEL *) (bmp->flat_data + i * row_byte_length);
+    }
+}
+
+static bool check_bmp_subrectangular(BMP *bmp, LONG x, LONG y, LONG w, LONG h) {
+    return 0 <= x && 0 < w
+           && 0 <= y && 0 < h
+           && x + w <= bmp->bit_map_info.bi_width
+           && y + h <= bmp->bit_map_info.bi_height;
 }
 
 void load_bmp(BMP *bmp, FILE *stream) {
@@ -17,14 +32,6 @@ void load_bmp(BMP *bmp, FILE *stream) {
     bmp->flat_data = (char *) malloc(bmp->bit_map_info.bi_size_image);
     fread(bmp->flat_data, bmp->bit_map_info.bi_size_image, 1, stream);
     init_data(bmp);
-}
-
-void init_data(BMP *bmp) {
-    bmp->data = (PIXEL **) malloc(bmp->bit_map_info.bi_height * sizeof(PIXEL *));
-    LONG row_byte_length = get_row_byte_length(bmp->bit_map_info.bi_width);
-    for (int i = 0; i < bmp->bit_map_info.bi_height; i++) {
-        bmp->data[bmp->bit_map_info.bi_height - 1 - i] = (PIXEL *) (bmp->flat_data + i * row_byte_length);
-    }
 }
 
 void free_bmp(BMP *bmp) {
@@ -50,13 +57,6 @@ void save_bmp(BMP *bmp, FILE *stream) {
     fwrite(&bmp->bit_map_file_header, sizeof(BIT_MAP_FILE_HEADER), 1, stream);
     fwrite(&bmp->bit_map_info, sizeof(BIT_MAP_INFO), 1, stream);
     fwrite(bmp->flat_data, 1, bmp->bit_map_info.bi_size_image, stream);
-}
-
-bool check_bmp_subrectangular(BMP *bmp, LONG x, LONG y, LONG w, LONG h) {
-    return 0 <= x && 0 < w
-           && 0 <= y && 0 < h
-           && x + w <= bmp->bit_map_info.bi_width
-           && y + h <= bmp->bit_map_info.bi_height;
 }
 
 BMP *crop(BMP *bmp, LONG x, LONG y, LONG w, LONG h) {
