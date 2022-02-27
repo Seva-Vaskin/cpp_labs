@@ -5,14 +5,14 @@ CXXFLAGS=-std=c++98 -Wall -pedantic
 
 all: main
 
-bin:
-	mkdir -p bin
+obj:
+	mkdir -p obj
 
-main: src/main.cpp bin/matrix.o include/*.h bin
-	$(CXX) $(CXXFLAGS) -o $@ -Iinclude $< bin/*
+main: src/main.cpp obj/matrix.o include/*.h obj
+	$(CXX) $(CXXFLAGS) -o $@ -Iinclude $< obj/*
 
-bin/%.o: src/%.cpp include/*.h bin
+obj/%.o: src/%.cpp include/*.h obj
 	$(CXX) $(CXXFLAGS) -c -o $@ -Iinclude $<
 
 clean:
-	rm -rf bin main
+	rm -rf obj main
