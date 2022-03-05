@@ -66,7 +66,7 @@ void MyVector::insert(std::size_t index, int value) {
 void MyVector::erase(std::size_t index) {
     if (index >= _size)
         throw std::invalid_argument("index out of range");
-    memmove(_data + index, _data + index + 1, (_size - 1 - index) * sizeof(int));
+    std::memmove(_data + index, _data + index + 1, (_size - 1 - index) * sizeof(int));
     resize(_size - 1);
 }
 
@@ -74,7 +74,7 @@ MyVector::MyVector(const MyVector &other_vector) {
     _size = other_vector._size;
     _capacity = other_vector._capacity;
     _data = new int[_capacity];
-    memcpy(_data, other_vector._data, _size * sizeof(int));
+    std::memcpy(_data, other_vector._data, _size * sizeof(int));
 }
 
 MyVector &MyVector::operator=(const MyVector &other_vector) {
