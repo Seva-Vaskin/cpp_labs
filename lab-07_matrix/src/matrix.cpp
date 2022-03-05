@@ -97,11 +97,9 @@ Matrix &Matrix::operator=(const Matrix &m) {
 }
 
 bool Matrix::operator==(const Matrix &m) const {
-    bool result = true;
-    for (std::size_t r = 0; r < _rows; r++)
-        for (std::size_t c = 0; c < _cols; c++)
-            result &= _data[r][c] == m._data[r][c];
-    return result;
+    if (_cols != m._cols || _rows != m._rows)
+        return false;
+    return std::memcmp(_data, m._data, _rows * _cols * sizeof(int));
 }
 
 bool Matrix::operator!=(const Matrix &m) const {
