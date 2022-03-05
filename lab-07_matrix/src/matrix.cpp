@@ -99,7 +99,7 @@ Matrix &Matrix::operator=(const Matrix &m) {
 bool Matrix::operator==(const Matrix &m) const {
     if (_cols != m._cols || _rows != m._rows)
         return false;
-    return std::memcmp(_data, m._data, _rows * _cols * sizeof(int)) == 0;
+    return std::memcmp(_data[0], m._data[0], _rows * _cols * sizeof(int)) == 0;
 }
 
 bool Matrix::operator!=(const Matrix &m) const {
