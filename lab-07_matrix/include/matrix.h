@@ -42,11 +42,11 @@ public:
 
     bool operator!=(const Matrix &m) const;
 
-    void swap(Matrix &m);
-
 private:
     std::size_t _rows;
     std::size_t _cols;
     int **_data;
+
+    void swap(Matrix &m);
 };
 
