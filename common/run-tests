@@ -111,6 +111,8 @@ elif [[ -f "$PROJECT_DIR/Makefile" ]] ; then
 	BUILD_DIR="$PROJECT_DIR"
 	EXECUTABLE_PATH="$PROJECT_DIR/$EXECUTABLE"
 	MAKEFILE_CHECK=1
+else
+	error "Failed to detect build system (Makefile/CMakeLists.txt)"
 fi
 EXECUTABLE_PATH="$BUILD_DIR/$EXECUTABLE"
 
@@ -165,12 +167,13 @@ function report_stdouterr {
 	if [[ ! -v REPORT ]] ; then
 		return
 	fi
+
 	report -n "<system-out>"
-	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDOUT" | \
+	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$1" | \
 		sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' >> "$REPORT_PATH"
 	report "</system-out>"
 	report -n "<system-err>"
-	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$RUN_STDERR" | \
+	sed '1000{s/.*/=== TRUNCATED: too many lines ===/;q;}' "$2" | \
 		sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' >> "$REPORT_PATH"
 	report "</system-err>"
 }
@@ -195,6 +198,45 @@ function run_tests {
 		EXIT_CODE=2
 		return 1
 	fi
+	
+	local RUN_OUTPUT_DIR="$OUTPUT_DIR/$TESTS_NAME"
+
+	if [[ -f "$TESTS_DIR/build-replace.target.txt" ]] ; then
+		local REPLACE_TARGET="$PROJECT_DIR/$(cat "$TESTS_DIR/build-replace.target.txt")"
+		local REPLACE_ORIGINAL="$REPLACE_TARGET.__backup__"
+		local REPLACE_WITH="$TESTS_DIR/build-replace.replacement.txt"
+
+		if [[ ! -f "$REPLACE_TARGET" ]] ; then
+			report "<testcase name=\"CUSTOM BUILD FAILURE\">"
+			test_error 'Custom build' 'custom-build' "Custom build failed: no file to replace."
+			report "</testcase>"
+			echo "Custom build because file to be replaced is not found."
+			return
+		fi
+
+		mv "$REPLACE_TARGET" "$REPLACE_ORIGINAL"
+		cp "$REPLACE_WITH" "$REPLACE_TARGET"
+
+		message "Rebuilding project with file replacement..."
+
+		local CUSTOM_BUILD_STDOUT="$RUN_OUTPUT_DIR/custom-build.stdout.log"
+		local CUSTOM_BUILD_STDERR="$RUN_OUTPUT_DIR/custom-build.stderr.log"
+
+		if ! make -C "$BUILD_DIR" -k > "$CUSTOM_BUILD_STDOUT" 2> "$CUSTOM_BUILD_STDERR"; then
+			mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
+
+			report "<testcase name=\"CUSTOM BUILD FAILURE\">"
+			test_error 'Custom build' 'custom-build' "Custom build failed."
+			report_stdouterr "$CUSTOM_BUILD_STDOUT" "$CUSTOM_BUILD_STDERR"
+			report "</testcase>"
+			echo "Custom build for suite failed, aborting."
+			return
+		fi
+		
+		message "Rebuild completed."
+		
+		mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
+	fi
 
 	for TEST_PATH in "$TESTS_DIR"/*.test.* ; do
 		local TEST_FILE_NAME="$(basename "$TEST_PATH")"
@@ -203,8 +245,6 @@ function run_tests {
 
 		local EXPECTED_STDOUT="$TESTS_DIR/$TEST_NAME.expected-output"
 		local EXPECTED_FILE="$TESTS_DIR/$TEST_NAME.expected-file"
-
-		local RUN_OUTPUT_DIR="$OUTPUT_DIR/$TESTS_NAME/"
 
 		local RUN_STDOUT="$RUN_OUTPUT_DIR/$TEST_NAME.stdout.log"
 		local RUN_STDERR="$RUN_OUTPUT_DIR/$TEST_NAME.stderr.log"
@@ -251,7 +291,7 @@ function run_tests {
 		compare_files "$EXPECTED_STDOUT" "$RUN_STDOUT" 'Stdout' 'stdout'
 		compare_files "$EXPECTED_FILE" "$RUN_FILE" 'Output file' 'output'
 
-		report_stdouterr
+		report_stdouterr "$RUN_STDOUT" "$RUN_STDERR"
 
 		report "</testcase>"
 		
@@ -282,7 +322,7 @@ function run_tests {
 				fi
 			fi
 
-			report_stdouterr
+			report_stdouterr "$RUN_STDOUT" "$RUN_STDERR"
 
 			report "</testcase>"
 		fi
