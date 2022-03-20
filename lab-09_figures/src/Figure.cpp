@@ -11,4 +11,6 @@ int Figure::get_id() const {
     return id;
 }
 
-Figure::~Figure() = default;
+void Figure::print() const {
+    printf("%d: x = %d y = %d", id, x, y);
+}

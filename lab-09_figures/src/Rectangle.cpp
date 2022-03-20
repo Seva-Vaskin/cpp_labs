@@ -3,7 +3,9 @@
 Rectangle::Rectangle(int id, int x, int y, int width, int height) : Figure(id, x, y), width(width), height(height) {}
 
 void Rectangle::print() const {
-    printf("Rectangle %d: x = %d y = %d width = %d height = %d\n", id, x, y, width, height);
+    printf("Rectangle ");
+    Figure::print();
+    printf(" width = %d height = %d\n", width, height);
 }
 
 bool Rectangle::is_inside(int x, int y) const {

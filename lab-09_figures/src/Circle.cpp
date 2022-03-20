@@ -12,7 +12,9 @@ Circle::~Circle() {
 }
 
 void Circle::print() const {
-    printf("Circle %d: x = %d y = %d radius = %d label = %s\n", id, x, y, radius, label);
+    printf("Circle ");
+    Figure::print();
+    printf(" radius = %d label = %s\n", radius, label);
 }
 
 bool Circle::is_inside(int x, int y) const {
