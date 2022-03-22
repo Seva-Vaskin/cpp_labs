@@ -5,5 +5,5 @@ save TESTS_DIR/tmp.edb
 add 1 Bobby 500 0
 load TESTS_DIR/tmp.edb
 list
-save TESTS_DIR/00-smoke.file
+save OUTPUT_FILE
 exit
