@@ -145,7 +145,7 @@ function test_error {
 	TEST_EXIT_CODE="${4-'1'}"
 
 	local FAILURE_TAG="${FAILURE_TAG-failure}"
-	
+
 	echo "  $INTRO: $MESSAGE"
 	report "<${FAILURE_TAG} message=\"$TYPE\">$MESSAGE</$FAILURE_TAG>"
 }
@@ -178,6 +178,15 @@ function report_stdouterr {
 	report "</system-err>"
 }
 
+function template {
+	sed \
+		-e "s:TESTS_DIR:${TESTS_DIR//:/\\:}:g" \
+		-e "s:OUTPUT_DIR:${RUN_OUTPUT_DIR//:/\\:}:g" \
+		-e "s:OUTPUT_FILE:${RUN_FILE//:/\\:}:g" \
+		-e "s:TMP_FILE:${TMP_FILE//:/\\:}:g" \
+		"$1"
+}
+
 function run_tests {
 	local TESTS_NAME="$1"
 	local TESTS_DIR="$2"
@@ -198,7 +207,7 @@ function run_tests {
 		EXIT_CODE=2
 		return 1
 	fi
-	
+
 	local RUN_OUTPUT_DIR="$OUTPUT_DIR/$TESTS_NAME"
 
 	if [[ -f "$TESTS_DIR/build-replace.target.txt" ]] ; then
@@ -232,9 +241,9 @@ function run_tests {
 			echo "Custom build for suite failed, aborting."
 			return
 		fi
-		
+
 		message "Rebuild completed."
-		
+
 		mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
 	fi
 
@@ -248,17 +257,22 @@ function run_tests {
 
 		local RUN_STDOUT="$RUN_OUTPUT_DIR/$TEST_NAME.stdout.log"
 		local RUN_STDERR="$RUN_OUTPUT_DIR/$TEST_NAME.stderr.log"
-		local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.output.bin" 
+		local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.output.bin"
+		local TMP_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.tmp.bin"
 
 		local TEST_EXIT_CODE=0
 
 		echo "Executing $TESTS_NAME test $TEST_NAME."
 		case "$TEST_TYPE" in
 			"args" | "args-fail")
-				local TEST_ARGS="$(sed -e "s:OUTPUT_FILE:$RUN_FILE:g" -e "s:TESTS_DIR:$TESTS_DIR:g" "$TEST_PATH" -e "s:OUTPUT_DIR:$RUN_OUTPUT_DIR:g")"
+				local TEST_ARGS="$(template "$TEST_PATH")"
 				local TEST_CMD="$EXECUTABLE_PATH $TEST_ARGS < /dev/null"
 				;;
-			"input" | "input-no-vg") local TEST_CMD="$EXECUTABLE_PATH < $TEST_PATH" ;;
+			"input" | "input-no-vg")
+				local RENDERED_TEST_PATH="$RUN_OUTPUT_DIR/$TEST_NAME.stdin"
+				template "$TEST_PATH" > "$RENDERED_TEST_PATH"
+				local TEST_CMD="$EXECUTABLE_PATH < $RENDERED_TEST_PATH"
+				;;
 			*)
 				FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Unknown test type $TEST_TYPE."
 				EXIT_CODE=2
@@ -294,15 +308,15 @@ function run_tests {
 		report_stdouterr "$RUN_STDOUT" "$RUN_STDERR"
 
 		report "</testcase>"
-		
+
 		if [[ $TEST_TYPE != *-no-vg ]] ; then
 			echo "  Executing with valgrind now..."
 
 			report "<testcase name=\"$TEST_NAME (run with Valgrind)\">"
-			
+
 			local RUN_STDOUT="$RUN_OUTPUT_DIR/$TEST_NAME.vg-stdout.log"
 			local RUN_STDERR="$RUN_OUTPUT_DIR/$TEST_NAME.vg-stderr.log"
-			local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.vg-output.bin" 
+			local RUN_FILE="$RUN_OUTPUT_DIR/$TEST_NAME.vg-output.bin"
 
 			local RUN_TEST="valgrind --leak-check=full --error-exitcode=123 -- $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 			log "About to run '$RUN_TEST'"
