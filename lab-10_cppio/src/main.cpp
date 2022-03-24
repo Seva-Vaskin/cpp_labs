@@ -1,19 +1,34 @@
-#include "employees.h"
-#include "bin_manip.h"
+#include <iostream>
 
-#include <sstream>
-
-using BinManip::write_le_int32;
-using BinManip::read_le_int32;
+#include "employees_array.h"
 
 int main() {
 
-    std::stringstream s;
-    int x = 10;
-    s << write_le_int32(x);  // Теперь в s лежит четыре байта: 0A 00 00 00.
-    s >> read_le_int32(x);  // Обратная операция: присваивает x = 10.
-    s.write("\x12\x34\x56\0", 4);
-    s >> read_le_int32(x);  // x = 0x00563412 = 5649426
+    Employees::EmployeesArray array;
 
+    std::string cmd;
+    while (std::cin >> cmd) {
+        if (cmd == "exit") {
+            break;
+        } else if (cmd == "load") {
+            std::string file_name;
+            std::cin >> file_name;
+            std::ifstream file(file_name, std::ios::binary | std::ios::in);
+            file >> array;
+            file.close();
+        } else if (cmd == "save") {
+            std::string file_name;
+            std::cin >> file_name;
+            std::ofstream file(file_name, std::ios::binary | std::ios::out);
+            file << array;
+            file.close();
+        } else if (cmd == "list") {
+            std::cout << array << std::endl;
+        } else if (cmd == "add") {
+            std::cin >> array;
+        } else {
+            std::cout << "Undefined command: " << cmd << std::endl;
+        }
+    }
     return 0;
 }
