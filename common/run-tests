@@ -115,6 +115,7 @@ else
 	error "Failed to detect build system (Makefile/CMakeLists.txt)"
 fi
 EXECUTABLE_PATH="$BUILD_DIR/$EXECUTABLE"
+ORIGINAL_EXECUTABLE_PATH="$EXECUTABLE_PATH"
 
 if ! make -C "$BUILD_DIR" -k ; then
 	error "Vanilla build failed."
@@ -187,6 +188,89 @@ function template {
 		"$1"
 }
 
+function customize_build {
+	key="$1"
+	context="$2"
+
+	if [[ -f "$TESTS_DIR/$key.target.txt" ]] ; then
+		log 'I see old-style custom build.'
+		local MODE=testee
+		local REPLACE_TARGET="$(cat "$TESTS_DIR/$key.target.txt")"
+		local REPLACE_WITH="$TESTS_DIR/$key.replacement.txt"
+	elif [[ -f "$TESTS_DIR/$key.custom-build.env" ]] ; then
+		log 'I see env-style custom build.'
+		local MODE
+		local REPLACE_PROJECT_DIR
+		local REPLACE_TARGET
+		local REPLACE_WITH
+		local REPLACE_EXECUTABLE_PATH
+
+		source "$TESTS_DIR/$key.custom-build.env"
+	else
+		return 0
+	fi
+
+	case "$MODE" in
+		testee)
+			local REPLACE_BUILD_DIR="$PROJECT_DIR"
+			local REPLACE_WITH="$TESTS_DIR/$REPLACE_WITH"
+			local REPLACE_EXECUTABLE_PATH="$ORIGINAL_EXECUTABLE_PATH"
+			;;
+		standalone)
+			local REPLACE_BUILD_DIR="$TESTS_DIR/$REPLACE_PROJECT_DIR"
+			local REPLACE_WITH="$PROJECT_DIR/$REPLACE_WITH"
+			local REPLACE_EXECUTABLE_PATH="$REPLACE_BUILD_DIR/$REPLACE_EXECUTABLE_PATH"
+			;;
+		*)
+			FAILURE_TAG=error test_error 'Internal error' 'interal-error' "Illegal custom build mode $MODE"
+			return 1
+	esac
+
+	local REPLACE_TARGET="$REPLACE_BUILD_DIR/$REPLACE_TARGET"
+	local REPLACE_ORIGINAL="$REPLACE_TARGET.__backup__"
+
+	log "Preparing a custom build:"
+	log "  MODE=$MODE"
+	log "  REPLACE_BUILD_DIR=$REPLACE_BUILD_DIR"
+	log "  REPLACE_TARGET=$REPLACE_TARGET"
+	log "  REPLACE_WITH=$REPLACE_WITH"
+	log "  REPLACE_EXECUTABLE_PATH=$REPLACE_EXECUTABLE_PATH"
+
+	if [[ ! -e "$REPLACE_TARGET" ]] ; then
+		report "<testcase name=\"CUSTOM BUILD FAILURE\">"
+		test_error 'Custom build' 'custom-build' "Custom build failed: no file to replace."
+		report "</testcase>"
+		echo "Custom build failed because file to be replaced is not found."
+		return 1
+	fi
+
+	mv "$REPLACE_TARGET" "$REPLACE_ORIGINAL"
+	cp -r "$REPLACE_WITH" "$REPLACE_TARGET"
+
+	message "Rebuilding project with file replacement..."
+
+	local CUSTOM_BUILD_STDOUT="$RUN_OUTPUT_DIR/$key.custom-build-stdout.log"
+	local CUSTOM_BUILD_STDERR="$RUN_OUTPUT_DIR/$key.custom-build-stderr.log"
+
+	if ! make -C "$REPLACE_BUILD_DIR" -k > "$CUSTOM_BUILD_STDOUT" 2> "$CUSTOM_BUILD_STDERR"; then
+		rm -rf "$REPLACE_TARGET"
+		mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
+
+		report "<testcase name=\"CUSTOM BUILD FAILURE\">"
+		test_error 'Custom build' 'custom-build' "Custom build failed."
+		report_stdouterr "$CUSTOM_BUILD_STDOUT" "$CUSTOM_BUILD_STDERR"
+		report "</testcase>"
+		echo "Custom build for $context failed, aborting."
+		return 1
+	fi
+
+	message "Rebuild completed."
+	EXECUTABLE_PATH="$REPLACE_EXECUTABLE_PATH"
+
+	rm -rf "$REPLACE_TARGET"
+	mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
+}
+
 function run_tests {
 	local TESTS_NAME="$1"
 	local TESTS_DIR="$2"
@@ -210,44 +294,15 @@ function run_tests {
 
 	local RUN_OUTPUT_DIR="$OUTPUT_DIR/$TESTS_NAME"
 
-	if [[ -f "$TESTS_DIR/build-replace.target.txt" ]] ; then
-		local REPLACE_TARGET="$PROJECT_DIR/$(cat "$TESTS_DIR/build-replace.target.txt")"
-		local REPLACE_ORIGINAL="$REPLACE_TARGET.__backup__"
-		local REPLACE_WITH="$TESTS_DIR/build-replace.replacement.txt"
-
-		if [[ ! -f "$REPLACE_TARGET" ]] ; then
-			report "<testcase name=\"CUSTOM BUILD FAILURE\">"
-			test_error 'Custom build' 'custom-build' "Custom build failed: no file to replace."
-			report "</testcase>"
-			echo "Custom build because file to be replaced is not found."
-			return
-		fi
-
-		mv "$REPLACE_TARGET" "$REPLACE_ORIGINAL"
-		cp "$REPLACE_WITH" "$REPLACE_TARGET"
-
-		message "Rebuilding project with file replacement..."
-
-		local CUSTOM_BUILD_STDOUT="$RUN_OUTPUT_DIR/custom-build.stdout.log"
-		local CUSTOM_BUILD_STDERR="$RUN_OUTPUT_DIR/custom-build.stderr.log"
-
-		if ! make -C "$BUILD_DIR" -k > "$CUSTOM_BUILD_STDOUT" 2> "$CUSTOM_BUILD_STDERR"; then
-			mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
-
-			report "<testcase name=\"CUSTOM BUILD FAILURE\">"
-			test_error 'Custom build' 'custom-build' "Custom build failed."
-			report_stdouterr "$CUSTOM_BUILD_STDOUT" "$CUSTOM_BUILD_STDERR"
-			report "</testcase>"
-			echo "Custom build for suite failed, aborting."
-			return
-		fi
-
-		message "Rebuild completed."
-
-		mv "$REPLACE_ORIGINAL" "$REPLACE_TARGET"
+	local EXECUTABLE_PATH="$ORIGINAL_EXECUTABLE_PATH"
+	if ! customize_build 'build-replace' "$TESTS_NAME suite" ; then
+		return
 	fi
+	local PRESERVE_EXECUTABLE_PATH="$EXECUTABLE_PATH"
 
 	for TEST_PATH in "$TESTS_DIR"/*.test.* ; do
+		EXECUTABLE_PATH="$PRESERVE_EXECUTABLE_PATH"
+
 		local TEST_FILE_NAME="$(basename "$TEST_PATH")"
 		local TEST_NAME="${TEST_FILE_NAME%%.*}"
 		local TEST_TYPE="${TEST_FILE_NAME##*.}"
@@ -262,6 +317,14 @@ function run_tests {
 
 		local TEST_EXIT_CODE=0
 
+		report "<testcase name=\"$TEST_NAME\">"
+
+		if ! customize_build "$TEST_NAME" "single test $TEST_NAME" ; then
+			report "</testcase>"
+			EXIT_CODE=2
+			continue
+		fi
+
 		echo "Executing $TESTS_NAME test $TEST_NAME."
 		case "$TEST_TYPE" in
 			"args" | "args-fail")
@@ -275,12 +338,11 @@ function run_tests {
 				;;
 			*)
 				FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Unknown test type $TEST_TYPE."
+				report "</testcase>"
 				EXIT_CODE=2
 				continue
 				;;
 		esac
-
-		report "<testcase name=\"$TEST_NAME\">"
 
 		local RUN_TEST="$TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 		# Bash parses && before word expansion, can't store EVAL settings in variable.
