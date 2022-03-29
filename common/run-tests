@@ -196,7 +196,7 @@ function customize_build {
 		log 'I see old-style custom build.'
 		local MODE=testee
 		local REPLACE_TARGET="$(cat "$TESTS_DIR/$key.target.txt")"
-		local REPLACE_WITH="$TESTS_DIR/$key.replacement.txt"
+		local REPLACE_WITH="$key.replacement.txt"
 	elif [[ -f "$TESTS_DIR/$key.custom-build.env" ]] ; then
 		log 'I see env-style custom build.'
 		local MODE
