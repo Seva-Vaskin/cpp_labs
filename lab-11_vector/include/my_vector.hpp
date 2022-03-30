@@ -1,40 +1,59 @@
-#ifndef MY_VECTOR_H_
-#define MY_VECTOR_H_
+#pragma once
 
 #include <cstddef>
 
 namespace containers {
 
-template<typename T>
-class my_vector {
-public:
-    my_vector();
-    my_vector(std::size_t n);
-    my_vector(my_vector other);
-    my_vector operator=(my_vector other);
-    ~my_vector();
+    template<typename T>
+    class my_vector {
+    public:
+        my_vector() {
+            capacity_ = 2;
+            size_ = 0;
+            array_ = new char[sizeof(T) * capacity_];
+        }
 
-    std::size_t size();
-    std::size_t capacity();
-    bool empty();
+        explicit my_vector(std::size_t n) : my_vector() {
+            static_assert(std::is_default_constructible<T>::value);
+            reserve(n);
+            size_ = n;
+            array_ = new T[n];
+        }
 
-    void resize(std::size_t n);
-    void reserve(std::size_t n);
+        explicit my_vector(std::size_t n, const T& default_value) : my_vector() {
 
-    ?? operator[](std::size_t index);
+        }
 
-    void push_back(T t);
-    void pop_back();
-    void clear();
+        my_vector(my_vector other);
 
-private:
-    size_t capacity_;
-    size_t size_;
-    T* array_;
-};
+        my_vector operator=(my_vector other);
+
+        ~my_vector();
+
+        std::size_t size();
+
+        std::size_t capacity();
+
+        bool empty();
+
+        void resize(std::size_t n);
+
+        void reserve(std::size_t n);
+
+        ??
+
+        operator[](std::size_t index);
+
+        void push_back(T t);
+
+        void pop_back();
+
+        void clear();
+
+    private:
+        size_t capacity_{};
+        size_t size_;
+        T *array_;
+    };
 
 }
-
-#include "my_vector_impl.h"
-
-#endif  // MY_VECTOR_H_
