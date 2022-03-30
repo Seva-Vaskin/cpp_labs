@@ -116,6 +116,7 @@ else
 fi
 EXECUTABLE_PATH="$BUILD_DIR/$EXECUTABLE"
 ORIGINAL_EXECUTABLE_PATH="$EXECUTABLE_PATH"
+ORIGINAL_BUILD_DIR="$BUILD_DIR"
 
 if ! make -C "$BUILD_DIR" -k ; then
 	error "Vanilla build failed."
@@ -212,7 +213,8 @@ function customize_build {
 
 	case "$MODE" in
 		testee)
-			local REPLACE_BUILD_DIR="$PROJECT_DIR"
+			local REPLACE_PROJECT_DIR="$PROJECT_DIR"
+			local REPLACE_BUILD_DIR="$ORIGINAL_BUILD_DIR"
 			local REPLACE_WITH="$TESTS_DIR/$REPLACE_WITH"
 			local REPLACE_EXECUTABLE_PATH="$ORIGINAL_EXECUTABLE_PATH"
 			;;
@@ -226,7 +228,7 @@ function customize_build {
 			return 1
 	esac
 
-	local REPLACE_TARGET="$REPLACE_BUILD_DIR/$REPLACE_TARGET"
+	local REPLACE_TARGET="$PROJECT_DIR/$REPLACE_TARGET"
 	local REPLACE_ORIGINAL="$REPLACE_TARGET.__backup__"
 
 	log "Preparing a custom build:"
@@ -296,6 +298,8 @@ function run_tests {
 
 	local EXECUTABLE_PATH="$ORIGINAL_EXECUTABLE_PATH"
 	if ! customize_build 'build-replace' "$TESTS_NAME suite" ; then
+		report "</testsuite>"
+		EXIT_CODE=2
 		return
 	fi
 	local PRESERVE_EXECUTABLE_PATH="$EXECUTABLE_PATH"
