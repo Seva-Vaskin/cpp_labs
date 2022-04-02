@@ -62,7 +62,7 @@ void test_copy_constructor(const my_vector<T> &vec) {
 template<typename T>
 void test_default_constructor() {
     my_vector<T> vec;
-    assert(vec.capacity() == 2);
+    assert(vec.capacity() == 1);
     assert(vec.size() == 0);
 }
 

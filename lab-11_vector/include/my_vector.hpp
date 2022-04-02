@@ -84,8 +84,11 @@ namespace containers {
             size_t new_capacity = capacity_;
             while (new_capacity < n)
                 new_capacity <<= 1;
-            char *new_array = new char[sizeof(T) * new_capacity];
-            std::memcpy(new_array, array_, sizeof(T) * size_);
+            T *new_array = reinterpret_cast<T *>(new char[sizeof(T) * new_capacity]);
+            for (size_t i = 0; i < size_; i++) {
+                new (new_array + i) T(array_[i]);
+                array_[i].~T();
+            }
             delete[] reinterpret_cast<char *>(array_);
             array_ = reinterpret_cast<T *>(new_array);
             capacity_ = new_capacity;
