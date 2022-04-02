@@ -15,9 +15,11 @@ namespace containers {
             array_ = reinterpret_cast<T *>(new char[sizeof(T) * capacity_]);
         }
 
-        explicit my_vector(std::size_t n) : my_vector() {
+        explicit my_vector(std::size_t n) {
             static_assert(std::is_default_constructible<T>::value);
-            reserve(n);
+            capacity_ = 2;
+            while (capacity_ < n)
+                capacity_ <<= 1;
             size_ = n;
             array_ = new T[n]();
         }
@@ -135,7 +137,7 @@ namespace containers {
         }
 
     private:
-        size_t capacity_{};
+        size_t capacity_;
         size_t size_;
         T *array_;
     };
