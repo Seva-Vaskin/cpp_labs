@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <ostream>
 
 namespace containers {
 
