@@ -10,7 +10,7 @@ namespace containers {
     class my_vector {
     public:
         my_vector() {
-            capacity_ = 2;
+            capacity_ = 1;
             size_ = 0;
             array_ = reinterpret_cast<T *>(new char[sizeof(T) * capacity_]);
         }
