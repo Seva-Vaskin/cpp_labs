@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstring>
 #include <ostream>
 
 namespace containers {
@@ -15,15 +14,15 @@ namespace containers {
             array_ = reinterpret_cast<T *>(new char[sizeof(T) * capacity_]);
         }
 
-        explicit my_vector(std::size_t n) : my_vector() {
+        explicit my_vector(std::size_t n) : capacity_(1), size_(0), array_(nullptr) {
             static_assert(std::is_default_constructible<T>::value);
             reserve(n);
             for (size_t i = 0; i < n; i++)
-                new (array_ + i) T();
+                new(array_ + i) T();
             size_ = n;
         }
 
-        explicit my_vector(std::size_t n, const T &init_value) : my_vector() {
+        explicit my_vector(std::size_t n, const T &init_value) : capacity_(1), size_(0), array_(nullptr) {
             static_assert(std::is_copy_constructible<T>::value);
             reserve(n);
             size_ = n;
@@ -86,7 +85,7 @@ namespace containers {
                 new_capacity <<= 1;
             T *new_array = reinterpret_cast<T *>(new char[sizeof(T) * new_capacity]);
             for (size_t i = 0; i < size_; i++) {
-                new (new_array + i) T(array_[i]);
+                new(new_array + i) T(array_[i]);
                 array_[i].~T();
             }
             delete[] reinterpret_cast<char *>(array_);
