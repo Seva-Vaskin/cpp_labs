@@ -24,12 +24,12 @@ namespace containers {
             array_ = new T[n]();
         }
 
-        explicit my_vector(std::size_t n, const T &default_value) : my_vector() {
+        explicit my_vector(std::size_t n, const T &init_value) : my_vector() {
             static_assert(std::is_copy_constructible<T>::value);
             reserve(n);
             size_ = n;
             for (size_t i = 0; i < n; i++) {
-                new(array_ + i) T(default_value);
+                new(array_ + i) T(init_value);
             }
         }
 
@@ -39,7 +39,7 @@ namespace containers {
             size_ = other.size_;
             array_ = reinterpret_cast<T *>(new char[sizeof(T) * capacity_]);
             for (size_t i = 0; i < size_; i++) {
-                new (array_ + i) T(other[i]);
+                new(array_ + i) T(other[i]);
             }
         }
 
@@ -58,11 +58,11 @@ namespace containers {
             delete[] reinterpret_cast<char *>(array_);
         }
 
-        std::size_t size() const {
+        size_t size() const {
             return size_;
         }
 
-        std::size_t capacity() const {
+        size_t capacity() const {
             return capacity_;
         }
 
@@ -72,14 +72,11 @@ namespace containers {
 
         void resize(std::size_t n) {
             static_assert(std::is_default_constructible<T>::value);
-            if (n <= size_) {
-                size_ = n;
-                return;
-            }
+            while (size_ > n)
+                array_[--size_].~T();
             reserve(n);
-            for (size_t i = size_; i < n; i++)
-                array_[i] = T();
-            size_ = n;
+            while (size_ < n)
+                new(array_ + (size_++)) T();
         }
 
         void reserve(std::size_t n) {
