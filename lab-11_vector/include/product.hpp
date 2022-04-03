@@ -17,10 +17,6 @@ namespace product {
 
         Product(const Product &other) : Product(other.name_, other.quantity_, other.price_) {}
 
-        Product(Product &&other) : name_(nullptr), quantity_(0), price_(0) {
-            swap(other);
-        }
-
         bool operator==(const Product &other) const {
             return strcmp(name_, other.name_) == 0 && quantity_ == other.quantity_ && price_ == other.price_;
         }
