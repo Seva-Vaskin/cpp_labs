@@ -85,7 +85,7 @@ namespace containers {
                 new_capacity <<= 1;
             T *new_array = reinterpret_cast<T *>(new char[sizeof(T) * new_capacity]);
             for (size_t i = 0; i < size_; i++) {
-                new(new_array + i) T(array_[i]);
+                new(new_array + i) T(std::move(array_[i]));
                 array_[i].~T();
             }
             delete[] reinterpret_cast<char *>(array_);

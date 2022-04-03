@@ -19,17 +19,6 @@ void test_specification() {
 }
 
 template<typename T>
-void do_push_back(my_vector<T> &vec, const T &element) {
-    vec.push_back(element);
-}
-
-template<typename T, typename... Args>
-void do_push_back(my_vector<T> &vec, const T &element, Args... args) {
-    vec.push_back(element);
-    do_push_back(vec, args...);
-}
-
-template<typename T>
 void check_equality(const my_vector<T> &vec1, const my_vector<T> &vec2) {
     assert(vec1.size() == vec2.size());
     for (size_t i = 0; i < vec1.size(); i++)
@@ -111,8 +100,16 @@ void test_2d_vector(const my_vector<T> &vec) {
     assert(actual.str() == expected.str());
 }
 
-template<typename T, typename... Args>
-void test_my_vector(Args... args) {
+template<typename T>
+void test_push_back_after_reserve(const T &x, const T &y) {
+    my_vector<T> vec;
+    vec.reserve(2);
+    vec.push_back(x);
+    vec.push_back(y);
+}
+
+template<typename T>
+void test_my_vector(const T& x, const T& y) {
     test_specification();
     test_push_back();
     test_empty();
@@ -121,12 +118,14 @@ void test_my_vector(Args... args) {
     test_output();
 
     my_vector<T> vec;
-    do_push_back(vec, args...);
+    vec.push_back(x);
+    vec.push_back(y);
 
     test_copy_constructor(vec);
     test_assignment_operator(vec);
     test_pop_back(vec);
     test_clear(vec);
+    test_push_back_after_reserve(x, y);
 }
 
 template<typename T>
@@ -162,10 +161,11 @@ void test_constructor_by_size() {
         assert(vec[i] == default_value);
 }
 
-template<typename T, typename... Args>
-void test_my_vector_default_constructible(Args... args) {
+template<typename T>
+void test_my_vector_default_constructible(const T& x, const T& y) {
     my_vector<T> vec;
-    do_push_back(vec, args...);
+    vec.push_back(x);
+    vec.push_back(y);
 
     test_constructor_by_size<T>();
     test_resize_decrease(vec);
