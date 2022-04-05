@@ -12,7 +12,9 @@ namespace matrix {
     void Registers::load(const std::string &str_id, const std::string &filename) {
         int id = parse_id(str_id);
         std::ifstream in(filename);
-        in >> matrices[id];
+        Matrix matrix;
+        in >> matrix;
+        matrices[id] = matrix;
     }
 
     void Registers::print(const std::string &str_id) {
