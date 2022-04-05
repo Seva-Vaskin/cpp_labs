@@ -219,7 +219,8 @@ function customize_build {
 			local REPLACE_EXECUTABLE_PATH="$ORIGINAL_EXECUTABLE_PATH"
 			;;
 		standalone)
-			local REPLACE_BUILD_DIR="$TESTS_DIR/$REPLACE_PROJECT_DIR"
+			local REPLACE_PROJECT_DIR="$TESTS_DIR/$REPLACE_PROJECT_DIR"
+			local REPLACE_BUILD_DIR="$REPLACE_PROJECT_DIR" # Will only work for Makefile projects
 			local REPLACE_WITH="$PROJECT_DIR/$REPLACE_WITH"
 			local REPLACE_EXECUTABLE_PATH="$REPLACE_BUILD_DIR/$REPLACE_EXECUTABLE_PATH"
 			;;
@@ -228,12 +229,14 @@ function customize_build {
 			return 1
 	esac
 
-	local REPLACE_TARGET="$PROJECT_DIR/$REPLACE_TARGET"
+	local REPLACE_TARGET="$REPLACE_PROJECT_DIR/$REPLACE_TARGET"
 	local REPLACE_ORIGINAL="$REPLACE_TARGET.__backup__"
 
 	log "Preparing a custom build:"
 	log "  MODE=$MODE"
+	log "  REPLACE_PROJECT_DIR=$REPLACE_PROJECT_DIR"
 	log "  REPLACE_BUILD_DIR=$REPLACE_BUILD_DIR"
+	log "  "
 	log "  REPLACE_TARGET=$REPLACE_TARGET"
 	log "  REPLACE_WITH=$REPLACE_WITH"
 	log "  REPLACE_EXECUTABLE_PATH=$REPLACE_EXECUTABLE_PATH"
@@ -386,7 +389,7 @@ function run_tests {
 
 			local RUN_TEST="valgrind --leak-check=full --error-exitcode=123 -- $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 			log "About to run '$RUN_TEST'"
-			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t $((10 * 1024)) && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
+			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
 			log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 
 			if [[ $TEST_TYPE != 'args-fail' ]] ; then
