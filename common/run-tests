@@ -389,7 +389,7 @@ function run_tests {
 
 			local RUN_TEST="valgrind --leak-check=full --error-exitcode=123 -- $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 			log "About to run '$RUN_TEST'"
-			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t $((10 * 1024)) && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
+			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
 			log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 
 			if [[ $TEST_TYPE != 'args-fail' ]] ; then
