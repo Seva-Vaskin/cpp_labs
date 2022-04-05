@@ -128,14 +128,13 @@ namespace matrix {
                 if (j + 1 < matrix._cols)
                     out << ' ';
             }
-            if (i + 1 < matrix._rows)
-                out << '\n';
+            out << '\n';
         }
         return out;
     }
 
     std::istream &operator>>(std::istream &in, Matrix &matrix) {
-        if (!in)
+        if (in.fail())
             throw MatrixException("LOAD: unable to open file.");
         size_t r, c;
         in >> r >> c;

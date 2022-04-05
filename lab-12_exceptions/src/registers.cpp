@@ -17,7 +17,7 @@ namespace matrix {
 
     void Registers::print(const std::string &str_id) {
         int id = parse_id(str_id);
-        std::cout << matrices[id] << std::endl;
+        std::cout << matrices[id];
     }
 
     void Registers::add(const std::string &str_id1, const std::string &str_id2) {
