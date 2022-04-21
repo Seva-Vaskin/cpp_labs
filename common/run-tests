@@ -280,9 +280,35 @@ function run_tests {
 	local TESTS_NAME="$1"
 	local TESTS_DIR="$2"
 
-	if [[ ! -d $TESTS_DIR ]] ; then
+	if [[ ! -d "$TESTS_DIR" ]] ; then
 		return 0
 	fi
+
+	local GEN_PATH="$TESTS_DIR/gen-tests"
+	if [[ -x "$GEN_PATH" ]] ; then
+		if ! "$GEN_PATH" ; then
+			report "<testsuite name=\"$TESTS_NAME\" tests=\"0\">"
+			FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Failed to generate tests"
+			EXIT_CODE=2
+			report "</testsuite>"
+			return 1
+		fi
+	fi
+	unset GEN_PATH
+
+	local TIME_LIMIT=10
+	local VG_TIME_LIMIT="$TIME_LIMIT"
+
+	function custom_check { : ; }
+
+	local EXT_PATH="$TESTS_DIR/run-tests.ext.bash"
+	if [[ -f "$EXT_PATH" ]] ; then
+		# What a dirty hack.
+		# I have no idea of a better thing to do.
+		log 'Loading extensions'
+		source "$EXT_PATH"
+	fi
+	unset EXT_PATH
 
 	local COUNT=0
 	for t in "$TESTS_DIR"/*.test.* ; do
@@ -293,6 +319,7 @@ function run_tests {
 
 	if ! mkdir "$OUTPUT_DIR/$TESTS_NAME" ; then
 		FAILURE_TAG=error test_error 'Internal error' 'internal-error' "Failed to create outputs directory".
+		report "</testsuite>"
 		EXIT_CODE=2
 		return 1
 	fi
@@ -311,8 +338,8 @@ function run_tests {
 		EXECUTABLE_PATH="$PRESERVE_EXECUTABLE_PATH"
 
 		local TEST_FILE_NAME="$(basename "$TEST_PATH")"
-		local TEST_NAME="${TEST_FILE_NAME%%.*}"
 		local TEST_TYPE="${TEST_FILE_NAME##*.}"
+		local TEST_NAME="${TEST_FILE_NAME%%.test.$TEST_TYPE}"
 
 		local EXPECTED_STDOUT="$TESTS_DIR/$TEST_NAME.expected-output"
 		local EXPECTED_FILE="$TESTS_DIR/$TEST_NAME.expected-file"
@@ -334,7 +361,7 @@ function run_tests {
 
 		echo "Executing $TESTS_NAME test $TEST_NAME."
 		case "$TEST_TYPE" in
-			"args" | "args-fail")
+			"args" | "args-fail" | "args-no-vg" | "args-fail-no-vg")
 				local TEST_ARGS="$(template "$TEST_PATH")"
 				local TEST_CMD="$EXECUTABLE_PATH $TEST_ARGS < /dev/null"
 				;;
@@ -354,7 +381,7 @@ function run_tests {
 		local RUN_TEST="$TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 		# Bash parses && before word expansion, can't store EVAL settings in variable.
 		log "About to run '$RUN_TEST'"
-		local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
+		local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -St "$TIME_LIMIT" && ulimit -Ht "$((TIME_LIMIT + 1))" && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
 		log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 		# TODO: should we filter stdout for prompts? IDK.
 
@@ -373,6 +400,7 @@ function run_tests {
 
 		compare_files "$EXPECTED_STDOUT" "$RUN_STDOUT" 'Stdout' 'stdout'
 		compare_files "$EXPECTED_FILE" "$RUN_FILE" 'Output file' 'output'
+		custom_check
 
 		report_stdouterr "$RUN_STDOUT" "$RUN_STDERR"
 
@@ -389,7 +417,7 @@ function run_tests {
 
 			local RUN_TEST="valgrind --leak-check=full --error-exitcode=123 -- $TEST_CMD > '$RUN_STDOUT' 2> '$RUN_STDERR'"
 			log "About to run '$RUN_TEST'"
-			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -t 10 && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
+			local RUN_EXIT_CODE="$(ulimit -v $((500 * 1024)) && ulimit -St "$VG_TIME_LIMIT" && ulimit -Ht "$((VG_TIME_LIMIT + 1))" && ulimit -f $((10 * 1024)) && eval $RUN_TEST ; echo $?)"
 			log RUN_EXIT_CODE="$RUN_EXIT_CODE"
 
 			if [[ $TEST_TYPE != 'args-fail' ]] ; then
