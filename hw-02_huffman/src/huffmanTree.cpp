@@ -119,8 +119,8 @@ namespace Huffman {
             return 0;
         size_t totalSequencesLength = 0;
         for (auto& [_, sequence] : _symbolsMap)
-            totalSequencesLength += sequence.size();
-        return 1 + 2 * symbolsCount() + (totalSequencesLength + 7) / 8;
+            totalSequencesLength += (sequence.size() + 7) / 8;
+        return 1 + 2 * symbolsCount() + totalSequencesLength;
     }
 
     size_t HuffmanTree::bitsToAlign() const {
