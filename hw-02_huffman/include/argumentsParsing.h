@@ -20,9 +20,9 @@ namespace ArgumentsParsing {
 
         ~ArgumentsParser() = default;
 
-        const std::string& file() const;
-        const std::string& output() const;
-        RunTypes runType() const;
+        const std::string& file() const noexcept;
+        const std::string& output() const noexcept;
+        RunTypes runType() const noexcept;
 
     private:
         void setRunType(RunTypes newType);

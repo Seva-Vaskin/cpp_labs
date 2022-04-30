@@ -4,9 +4,9 @@ namespace Huffman {
     namespace {
         void encodeTree(BinaryIO::BinaryWriter &writer, const HuffmanTree &tree) {
             writer.writeNumber(tree.symbolsCount() - 1, 1);
-            for (char symbol: tree.symbols()) {
-                writer.writeNumber((BinaryIO::byte) symbol, 1);
-                auto& sequence = tree.getSequence(symbol);
+            for (BinaryIO::byte symbol: tree.symbols()) {
+                writer.writeNumber(symbol, 1);
+                auto &sequence = tree.getSequence(symbol);
                 assert(!sequence.empty() && sequence.size() <= 256);
                 writer.writeNumber(sequence.size() - 1, 1);
                 writer.writeSequence(sequence);
@@ -41,7 +41,7 @@ namespace Huffman {
         _in->seekg(0);
         int symbol;
         while ((symbol = _in->get()) != EOF) {
-            _writer.writeSequence(header.huffmanTree().getSequence((char)symbol));
+            _writer.writeSequence(header.huffmanTree().getSequence((BinaryIO::byte)symbol));
         }
     }
 }

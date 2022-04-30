@@ -14,33 +14,31 @@
 namespace Huffman {
     class HuffmanTree {
     public:
-        const std::vector<bool> &getSequence(char symbol) const;
+        const std::vector<bool> &getSequence(BinaryIO::byte symbol) const;
 
         static HuffmanTree fromEncodedText(BinaryIO::BinaryReader &reader);
 
         HuffmanTree() : _root(nullptr) {}
 
-        HuffmanTree(const HuffmanTree &tree);
+        HuffmanTree(const HuffmanTree &tree) noexcept;
 
         ~HuffmanTree();
 
         explicit HuffmanTree(HuffmanTreeNode *root);
 
-        char decodeSymbol(BinaryIO::BinaryReader& reader) const;
+        BinaryIO::byte decodeSymbol(BinaryIO::BinaryReader& reader) const;
 
-        size_t encodedByteSize() const;
+        size_t encodedByteSize() const noexcept;
 
-        size_t symbolsCount() const;
+        size_t symbolsCount() const noexcept;
 
-        std::vector<char> symbols() const;
-
-        size_t bitsToAlign() const;
+        std::vector<BinaryIO::byte> symbols() const noexcept;
 
     private:
-        void addSymbol(char symbol, const std::vector<bool> &sequence);
+        void addSymbol(BinaryIO::byte symbol, const std::vector<bool> &sequence);
 
     private:
         HuffmanTreeNode *_root;
-        std::map<char, std::vector<bool>> _symbolsMap;
+        std::map<BinaryIO::byte, std::vector<bool>> _symbolsMap;
     };
 }

@@ -15,6 +15,8 @@ namespace BinaryIO {
 
         explicit BinaryReader(std::istream *in);
 
+        BinaryReader() : _buf(0), _buf_size(0), _in(nullptr), _isEof(false) {};
+
         int readBit();
 
         bool isEof() const;
@@ -30,10 +32,8 @@ namespace BinaryIO {
     private:
         void updateByte();
 
-        BinaryReader() : _buf(0), _buf_size(0), _in(nullptr), _isEof(false) {};
-
     private:
-        byte _buf;
+        int _buf;
         byte _buf_size;
         std::istream *_in;
         bool _isEof;

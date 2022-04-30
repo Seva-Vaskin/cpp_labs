@@ -2,7 +2,7 @@
 
 namespace Huffman {
     namespace {
-        void preprocessText(std::istream &in, std::map<char, size_t> &frequency, size_t &textLength) {
+        void preprocessText(std::istream &in, std::map<BinaryIO::byte, size_t> &frequency, size_t &textLength) {
             in.clear();
             in.seekg(0);
             textLength = 0;
@@ -13,7 +13,7 @@ namespace Huffman {
             }
         }
 
-        size_t findOutBitSequenceLength(const std::map<char, size_t> &frequency, const HuffmanTree &huffmanTree) {
+        size_t findBitSequenceLength(const std::map<BinaryIO::byte, size_t> &frequency, const HuffmanTree &huffmanTree) noexcept {
             size_t length = 0;
             for (auto [symbol, symFrequency]: frequency) {
                 length += symFrequency * huffmanTree.getSequence(symbol).size();
@@ -23,7 +23,7 @@ namespace Huffman {
     }
 
     HuffmanHeader HuffmanHeader::fromRegularText(std::istream &in) {
-        std::map<char, size_t> frequency;
+        std::map<BinaryIO::byte, size_t> frequency;
         size_t textLength;
         preprocessText(in, frequency, textLength);
         if (frequency.empty())
@@ -43,7 +43,7 @@ namespace Huffman {
             nodes.emplace(count1 + count2, new HuffmanTreeNode(node1, node2));
         }
         auto huffmanTree = HuffmanTree(nodes.top().second);
-        size_t bitSequenceLength = findOutBitSequenceLength(frequency, huffmanTree);
+        size_t bitSequenceLength = findBitSequenceLength(frequency, huffmanTree);
         return {huffmanTree, textLength, bitSequenceLength};
     }
 
@@ -57,23 +57,23 @@ namespace Huffman {
     }
 
 
-    size_t HuffmanHeader::textLength() const {
+    size_t HuffmanHeader::textLength() const noexcept {
         return _textLength;
     }
 
-    const HuffmanTree &HuffmanHeader::huffmanTree() const {
+    const HuffmanTree &HuffmanHeader::huffmanTree() const noexcept {
         return _tree;
     }
 
-    size_t HuffmanHeader::bitSequenceLength() const {
+    size_t HuffmanHeader::bitSequenceLength() const noexcept {
         return _bitSequenceLength;
     }
 
-    size_t HuffmanHeader::encodedTextByteLength() const {
+    size_t HuffmanHeader::encodedTextByteLength() const noexcept {
         return (_bitSequenceLength + 7) / 8;
     }
 
-    size_t HuffmanHeader::headerByteLength() const {
+    size_t HuffmanHeader::headerByteLength() const noexcept{
         if (_textLength == 0)
             return 0;
         return 16 + _tree.encodedByteSize();

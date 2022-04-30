@@ -2,22 +2,32 @@
 #include "huffmanEncoder.h"
 #include <sstream>
 
-TEST_CASE("Empty File") {
-    auto in = new std::istringstream();
+TEST_CASE("Encode empty File") {
+    std::string inStr = "";
+    auto in = new std::istringstream(inStr);
     auto out = new std::ostringstream();
     Huffman::HuffmanEncoder encoder(in, out);
     encoder.encode();
     CHECK_EQ(out->str(), "");
 }
 
-TEST_CASE("OneSymbol") {
+
+//TEST_CASE("Encode not existence file") {
+//    auto in = new std::ifstream("thisFileNotExists.txt", std::ios::binary);
+//    auto out = new std::stringstream();
+//    CHECK_THROWS_AS([&]() {
+//        Huffman::HuffmanEncoder encoder(in, out);
+//    }, BinaryIO::BinaryReaderError);
+//}
+
+TEST_CASE("Encode one symbol") {
     std::string inStr = "a";
     auto in = new std::istringstream(inStr);
     auto out = new std::ostringstream();
     Huffman::HuffmanEncoder encoder(in, out);
     encoder.encode();
     std::string outStr = out->str();
-    CHECK_EQ(outStr.size(), 20);
+    CHECK_EQ(outStr.size(), 21);
     std::string expectedTextLength(8, 0);
     CHECK_EQ(outStr.substr(8, 8), expectedTextLength);
     std::string expectedBitLength(8, 0);

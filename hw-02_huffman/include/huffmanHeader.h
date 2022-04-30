@@ -22,15 +22,15 @@ namespace Huffman {
 
         ~HuffmanHeader() = default;
 
-        size_t textLength() const;
+        size_t textLength() const noexcept;
 
-        size_t encodedTextByteLength() const;
+        size_t encodedTextByteLength() const noexcept;
 
-        size_t headerByteLength() const;
+        size_t headerByteLength() const noexcept;
 
-        size_t bitSequenceLength() const;
+        size_t bitSequenceLength() const noexcept;
 
-        const HuffmanTree &huffmanTree() const;
+        const HuffmanTree &huffmanTree() const noexcept;
 
     private:
         HuffmanTree _tree;

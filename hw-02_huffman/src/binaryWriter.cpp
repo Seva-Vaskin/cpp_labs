@@ -2,7 +2,7 @@
 
 namespace BinaryIO {
     namespace {
-        std::vector<bool> numberToBinarySequence(uint64_t number, int byteLength) {
+        std::vector<bool> numberToBinarySequence(uint64_t number, int byteLength) noexcept {
             std::vector<bool> sequence;
             int bitLength = 8 * byteLength;
             for (int i = bitLength - 1; i >= 0; i--) {
@@ -22,12 +22,16 @@ namespace BinaryIO {
     void BinaryWriter::flushBuf() {
         if (_buf_size == 0)
             return;
-        _out->put((std::ostream::char_type) _buf);
+        *_out << _buf;
         _buf_size = 0;
         _buf = 0;
     }
 
     BinaryWriter::BinaryWriter(std::ostream *out) : BinaryWriter() {
+        if (!*out) {
+            delete out;
+            throw BinaryWriterError("Bad output file");
+        }
         _out = out;
     }
 

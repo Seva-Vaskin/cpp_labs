@@ -17,7 +17,14 @@ include_directories(include)
 add_executable(hw-02_huffman
         src/main.cpp
         src/argumentsParsing.cpp
-        src/binaryWriter.cpp include/binaryWriter.h src/binaryReader.cpp include/binaryReader.h src/huffmanTreeNode.cpp include/huffmanTreeNode.h src/huffmanTree.cpp include/huffmanTree.h src/huffmanEncoder.cpp include/huffmanEncoder.h src/huffmanHeader.cpp include/huffmanHeader.h src/huffmanDecoder.cpp include/huffmanDecoder.h include/huffmanError.h)
+        src/binaryWriter.cpp
+        src/binaryReader.cpp
+        src/huffmanTreeNode.cpp
+        src/huffmanTree.cpp
+        src/huffmanEncoder.cpp
+        src/huffmanHeader.cpp
+        src/huffmanDecoder.cpp
+        )
 
 add_executable(hw-02_huffman_test
         test/test.cpp
@@ -26,6 +33,8 @@ add_executable(hw-02_huffman_test
         test/testBinaryWriter.cpp
         test/testHuffmanHeader.cpp
         test/testHuffmanEncoder.cpp
+        test/testHuffmanDecoder.cpp
+        test/testSamples.cpp
         src/argumentsParsing.cpp
         src/binaryWriter.cpp
         src/binaryReader.cpp
@@ -33,4 +42,13 @@ add_executable(hw-02_huffman_test
         src/huffmanTreeNode.cpp
         src/huffmanEncoder.cpp
         src/huffmanHeader.cpp
-        src/huffmanDecoder.cpp test/testHuffmanDecoder.cpp include/huffmanError.h)
+        src/huffmanDecoder.cpp
+        )
+
+add_executable(hw-02_huffman_generateBitRandomFile
+        test/bigRandomFileGenerator.cpp
+        )
+
+add_executable(hw-02_huffman_generateAllSymbols
+        test/allSymbolsGenerator.cpp
+        )

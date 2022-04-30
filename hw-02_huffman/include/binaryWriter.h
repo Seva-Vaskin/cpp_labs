@@ -1,12 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <fstream>
 #include <vector>
 
 namespace BinaryIO {
-
     typedef unsigned char byte;
 
     class BinaryWriter {
@@ -25,7 +25,6 @@ namespace BinaryIO {
 
         ~BinaryWriter();
 
-    private:
         BinaryWriter() : _buf(0), _buf_size(0), _out(nullptr) {};
 
     private:
@@ -34,5 +33,8 @@ namespace BinaryIO {
         std::ostream *_out;
     };
 
-
+    class BinaryWriterError : public std::logic_error {
+    public:
+        explicit BinaryWriterError(const std::string &what) : std::logic_error(what) {}
+    };
 }

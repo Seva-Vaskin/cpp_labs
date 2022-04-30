@@ -8,7 +8,7 @@ TEST_CASE("Write tests") {
     auto s = new std::stringstream();
     BinaryWriter writer(s);
 
-    SUBCASE("Empty") {
+    SUBCASE("Read empty") {
         writer.flushBuf();
         CHECK_EQ(s->str(), "");
     }

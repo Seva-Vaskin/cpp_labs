@@ -2,16 +2,28 @@
 #include "huffmanDecoder.h"
 #include <sstream>
 
-TEST_CASE("Empty File") {
-    auto in = new std::istringstream("");
-    auto out = new std::ostringstream();
+//TEST_CASE("Decode empty File") {
+//    std::string inStr;
+//    auto in = new std::istringstream(inStr);
+//    auto out = new std::ostringstream();
+//    Huffman::HuffmanDecoder decoder(in, out);
+//    decoder.decode();
+//    std::string outStr = out->str();
+//    CHECK_EQ(outStr, inStr);
+//}
+
+void createDecoder(std::istream* in, std::ostream* out) {
     Huffman::HuffmanDecoder decoder(in, out);
-    decoder.decode();
-    CHECK_EQ(out->str(), "");
 }
 
-TEST_CASE("OneSymbol") {
-    std::string inStr(20, 0);
+//TEST_CASE("Decode not existence file") {
+//    auto in = new std::ifstream("thisFileNotExists.txt", std::ios::binary);
+//    auto out = new std::stringstream();
+//    CHECK_THROWS_AS(createDecoder(in, out), Huffman::HuffmanError);
+//}
+
+TEST_CASE("Decode one symbol") {
+    std::string inStr(21, 0);
     inStr[17] = 'a';
     inStr[19] = '\x01';
     auto in = new std::istringstream(inStr);

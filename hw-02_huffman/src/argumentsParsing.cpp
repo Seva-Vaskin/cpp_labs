@@ -3,7 +3,7 @@
 namespace ArgumentsParsing {
 
     namespace {
-        std::vector<std::string> createVectorOfArguments(int argc, const char *argv[]) {
+        std::vector<std::string> createVectorOfArguments(int argc, const char *argv[]) noexcept {
             std::vector<std::string> stringArgv(argc);
             for (int i = 0; i < argc; i++)
                 stringArgv[i] = argv[i];
@@ -52,15 +52,15 @@ namespace ArgumentsParsing {
         _runType = newType;
     }
 
-    const std::string &ArgumentsParser::file() const {
+    const std::string &ArgumentsParser::file() const noexcept {
         return _file;
     }
 
-    const std::string &ArgumentsParser::output() const {
+    const std::string &ArgumentsParser::output() const noexcept {
         return _output;
     }
 
-    RunTypes ArgumentsParser::runType() const {
+    RunTypes ArgumentsParser::runType() const noexcept {
         return _runType;
     }
 }

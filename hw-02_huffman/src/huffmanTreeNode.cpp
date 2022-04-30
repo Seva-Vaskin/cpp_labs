@@ -1,18 +1,18 @@
 #include "huffmanTreeNode.h"
 
 namespace Huffman {
-    HuffmanTreeNode *Huffman::HuffmanTreeNode::go(bool bit) const {
+    HuffmanTreeNode *Huffman::HuffmanTreeNode::go(bool bit) const noexcept {
         if (bit)
             return _next1;
         else
             return _next0;
     }
 
-    bool HuffmanTreeNode::isTerminate() const {
+    bool HuffmanTreeNode::isTerminate() const noexcept {
         return _isTerminate;
     }
 
-    char HuffmanTreeNode::symbol() const {
+    BinaryIO::byte HuffmanTreeNode::symbol() const noexcept {
         return _symbol;
     }
 

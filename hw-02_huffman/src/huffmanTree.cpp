@@ -2,9 +2,8 @@
 
 namespace Huffman {
     namespace {
-        void buildSymbolsMapDFS(HuffmanTreeNode *node, std::map<char, std::vector<bool>> &symbolsMap,
-                                std::vector<bool> &sequence) {
-            assert(node != nullptr);
+        void buildSymbolsMapDFS(HuffmanTreeNode *node, std::map<BinaryIO::byte, std::vector<bool>> &symbolsMap,
+                                std::vector<bool> &sequence) noexcept {
             if (node->isTerminate()) {
                 symbolsMap[node->symbol()] = sequence;
                 return;
@@ -16,7 +15,7 @@ namespace Huffman {
             sequence.pop_back();
         }
 
-        void buildSymbolsMap(HuffmanTreeNode *root, std::map<char, std::vector<bool>> &symbolsMap) {
+        void buildSymbolsMap(HuffmanTreeNode *root, std::map<BinaryIO::byte, std::vector<bool>> &symbolsMap) noexcept {
             std::vector<bool> sequence;
             if (root->isTerminate()) {
                 symbolsMap[root->symbol()].push_back(false);
@@ -26,7 +25,7 @@ namespace Huffman {
         }
 
         void addSymbolRecursively(
-                HuffmanTreeNode *node, char symbol, const std::vector<bool> &sequence, size_t pos = 0) {
+                HuffmanTreeNode *node, BinaryIO::byte symbol, const std::vector<bool> &sequence, size_t pos = 0) {
             assert(node != nullptr);
             if (pos == sequence.size()) {
                 if (node->isTerminate())
@@ -40,7 +39,7 @@ namespace Huffman {
             }
         }
 
-        char decodeSymbolRecursively(HuffmanTreeNode *node, BinaryIO::BinaryReader &reader) {
+        BinaryIO::byte decodeSymbolRecursively(HuffmanTreeNode *node, BinaryIO::BinaryReader &reader) {
             if (node == nullptr)
                 throw HuffmanError("Undefined binary sequence");
             if (node->isTerminate())
@@ -55,21 +54,22 @@ namespace Huffman {
     }
 
     HuffmanTree::HuffmanTree(HuffmanTreeNode *root) : _root(root) {
+        assert(root != nullptr);
         buildSymbolsMap(_root, _symbolsMap);
     }
 
-    const std::vector<bool> &HuffmanTree::getSequence(char symbol) const {
+    const std::vector<bool> &HuffmanTree::getSequence(BinaryIO::byte symbol) const {
         auto it = _symbolsMap.find(symbol);
         if (it == _symbolsMap.end())
             throw HuffmanError("Trying to get binary sequence of undefined symbol");
         return it->second;
     }
 
-    size_t HuffmanTree::symbolsCount() const {
+    size_t HuffmanTree::symbolsCount() const noexcept {
         return _symbolsMap.size();
     }
 
-    HuffmanTree::HuffmanTree(const HuffmanTree &tree) {
+    HuffmanTree::HuffmanTree(const HuffmanTree &tree) noexcept {
         if (tree._root == nullptr)
             _root = nullptr;
         else
@@ -81,8 +81,8 @@ namespace Huffman {
         delete _root;
     }
 
-    std::vector<char> HuffmanTree::symbols() const {
-        std::vector<char> result;
+    std::vector<BinaryIO::byte> HuffmanTree::symbols() const noexcept {
+        std::vector<BinaryIO::byte> result;
         for (auto &[symbol, _]: _symbolsMap)
             result.push_back(symbol);
         return result;
@@ -92,7 +92,7 @@ namespace Huffman {
         auto tree = HuffmanTree();
         size_t symbolsCount = reader.readNumber(1) + 1;
         for (size_t i = 0; i < symbolsCount; i++) {
-            char symbol = (char) reader.readNumber(1);
+            BinaryIO::byte symbol = (BinaryIO::byte) reader.readNumber(1);
             size_t sequenceSize = reader.readNumber(1) + 1;
             auto sequence = reader.readSequence(sequenceSize);
             reader.flushBuf();
@@ -101,7 +101,7 @@ namespace Huffman {
         return tree;
     }
 
-    void HuffmanTree::addSymbol(char symbol, const std::vector<bool> &sequence) {
+    void HuffmanTree::addSymbol(BinaryIO::byte symbol, const std::vector<bool> &sequence) {
         if (_symbolsMap.count(symbol))
             throw HuffmanError("Multiple adding symbol to huffman tree");
         _symbolsMap[symbol] = sequence;
@@ -110,23 +110,16 @@ namespace Huffman {
         addSymbolRecursively(_root, symbol, sequence);
     }
 
-    char HuffmanTree::decodeSymbol(BinaryIO::BinaryReader &reader) const {
+    BinaryIO::byte HuffmanTree::decodeSymbol(BinaryIO::BinaryReader &reader) const {
         return decodeSymbolRecursively(_root, reader);
     }
 
-    size_t HuffmanTree::encodedByteSize() const {
+    size_t HuffmanTree::encodedByteSize() const noexcept {
         if (_symbolsMap.empty())
             return 0;
         size_t totalSequencesLength = 0;
         for (auto& [_, sequence] : _symbolsMap)
             totalSequencesLength += (sequence.size() + 7) / 8;
         return 1 + 2 * symbolsCount() + totalSequencesLength;
-    }
-
-    size_t HuffmanTree::bitsToAlign() const {
-        size_t totalSequencesLength = 0;
-        for (auto& [_, sequence] : _symbolsMap)
-            totalSequencesLength += sequence.size();
-        return (8 - totalSequencesLength % 8) % 8;
     }
 }

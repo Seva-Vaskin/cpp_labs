@@ -15,12 +15,12 @@ namespace Huffman {
     void HuffmanDecoder::decodeBody(const HuffmanHeader &header) {
         size_t bitsToRead = header.bitSequenceLength();
         while (bitsToRead) {
-            char symbol = header.huffmanTree().decodeSymbol(_reader);
+            BinaryIO::byte symbol = header.huffmanTree().decodeSymbol(_reader);
             size_t sequenceLength = header.huffmanTree().getSequence(symbol).size();
             if (sequenceLength > bitsToRead)
                 throw HuffmanError("Broken file");
             bitsToRead -= sequenceLength;
-            _out->put(symbol);
+            _out->put((char)symbol);
         }
     }
 }

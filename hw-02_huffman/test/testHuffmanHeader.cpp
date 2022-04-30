@@ -7,7 +7,7 @@
 using namespace Huffman;
 
 namespace {
-    bool symbolSetsAreEqual(const std::string& s1, const std::vector<char>& s2) {
+    bool symbolSetsAreEqual(const std::string& s1, const std::vector<BinaryIO::byte>& s2) {
         bool ans = true;
         for (auto& i : s1)
             ans &= std::count(s2.begin(), s2.end(), i) != 0;

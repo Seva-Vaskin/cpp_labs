@@ -1,13 +1,22 @@
 #include "binaryReader.h"
 
 namespace BinaryIO {
-    BinaryReader::BinaryReader(std::istream *in) : BinaryReader() {
-        _in = in;
+    namespace {
+        std::ifstream *ifstreamFromFilename(const std::string &filename) {
+            return new std::ifstream(filename, std::ios::binary);
+        }
     }
 
-    BinaryReader::BinaryReader(const std::string &filename) : BinaryReader() {
-        _in = new std::ifstream(filename, std::ios::binary);
+    BinaryReader::BinaryReader(std::istream *in) : BinaryReader() {
+        if (!*in) {
+            delete in;
+            throw BinaryReaderError("Bad input file");
+        }
+        _in = in;
+        flushBuf();
     }
+
+    BinaryReader::BinaryReader(const std::string &filename) : BinaryReader(ifstreamFromFilename(filename)) {}
 
     int BinaryReader::readBit() {
         updateByte();
@@ -45,20 +54,20 @@ namespace BinaryIO {
             int bit = readBit();
             if (bit == EOF)
                 throw BinaryReaderError("Unexpected end of file");
-            result.push_back((bool)bit);
+            result.push_back((bool) bit);
         }
         return result;
     }
 
     bool BinaryReader::isEof() const {
-        return _in->eof() || (_buf_size == 0 && _in->peek() == EOF);
+        return _isEof;
     }
 
     void BinaryReader::flushBuf() {
         if (_buf_size == 8)
             return;
         _buf = _in->get();
-        _isEof |= _in->eof();
+        _isEof |= _buf == EOF;
         _buf_size = 8;
     }
 }

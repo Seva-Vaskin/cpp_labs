@@ -10,10 +10,9 @@ int main(int argc, const char *argv[]) {
     try {
         ArgumentsParsing::ArgumentsParser parser(argc, argv);
         assert(parser.runType() != ArgumentsParsing::Undefined);
-        BinaryIO::BinaryReader reader(parser.output());
         auto in = new std::ifstream(parser.file(), std::ios::binary);
         auto out = new std::ofstream(parser.output(), std::ios::binary);
-        if (in->bad() || out->bad())
+        if (!*in || !*out)
             throw std::ios_base::failure("Troubles with input/output");
         if (parser.runType() == ArgumentsParsing::Compress) {
             Huffman::HuffmanEncoder encoder(in, out);
