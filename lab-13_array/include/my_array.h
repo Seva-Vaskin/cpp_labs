@@ -11,11 +11,7 @@ namespace lab_13 {
     private:
         T _data[N];
     public:
-        my_array() {
-            for (size_t i = 0; i < N; i++) {
-                new(_data + i) T();
-            }
-        }
+        my_array() = default;
 
         my_array(const my_array &other_array) {
             for (size_t i = 0; i < N; i++)
@@ -58,7 +54,8 @@ namespace lab_13 {
     template<size_t N>
     class my_array<bool, N> {
     private:
-        uint8_t _data[(N + 7) / 8] = {};
+        static const size_t _bucketSize = 8;
+        uint8_t _data[(N + _bucketSize - 1) / _bucketSize] = {};
 
         class proxy {
         private:
@@ -71,12 +68,13 @@ namespace lab_13 {
                 return _storage >> _pos & 1;
             }
 
-            proxy& operator=(bool new_value) {
+            proxy &operator=(bool new_value) {
                 _storage &= uint8_t(-1) ^ (1 << _pos);
                 _storage |= new_value << _pos;
                 return *this;
             }
-            proxy& operator=(const proxy& other_proxy) {
+
+            proxy &operator=(const proxy &other_proxy) {
                 return operator=(bool(other_proxy));
             }
         };
@@ -85,15 +83,15 @@ namespace lab_13 {
         my_array() = default;
 
         my_array(const my_array &other_array) {
-            std::copy(other_array._data, other_array._data + (N + 7) / 8, _data);
+            std::copy(std::begin(other_array._data), std::end(other_array._data), _data);
         }
 
         bool operator[](size_t index) const {
-            return _data[index / 8] >> (index % 8) & 1;
+            return _data[index / _bucketSize] >> (index % _bucketSize) & 1;
         }
 
         proxy operator[](size_t index) {
-            return proxy(_data[index / 8], index % 8);
+            return proxy(_data[index / _bucketSize], index % _bucketSize);
         }
 
         bool at(size_t index) const {
@@ -118,9 +116,9 @@ namespace lab_13 {
 
         void fill(bool new_value) {
             if (new_value)
-                std::fill(_data, _data + (N + 7) / 8, uint8_t(-1));
+                std::fill(std::begin(_data), std::end(_data), uint8_t(-1));
             else
-                std::fill(_data, _data + (N + 7) / 8, uint8_t(0));
+                std::fill(std::begin(_data), std::end(_data), uint8_t(0));
         }
     };
 }

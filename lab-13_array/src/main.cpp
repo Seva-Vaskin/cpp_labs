@@ -7,20 +7,12 @@
 //using std::cout;
 //using std::endl;
 //
+//struct Test {
+//    Test() {
+//        std::cerr << "Called constructor" << std::endl;
+//    }
+//};
+//
 //int main() {
-//    my_array<bool, 10> a;
-//    cout << a.size() << ' ' << a.empty() << endl;
-//    a.fill(false);
-//    for (int i = 0; i < 10; i++)
-//        cout << a[i] << ' ';
-//    cout << endl;
-//    a.fill(true);
-//    for (int i = 0; i < 10; i++)
-//        cout << a[i] << ' ';
-//    cout << endl;
-//    a[9] = false;
-//    a[0] = a[1] = false;
-//    for (int i = 0; i < 10; i++)
-//        cout << a[i] << ' ';
-//    cout << endl;
+//    my_array<Test, 3> arr;
 //}
